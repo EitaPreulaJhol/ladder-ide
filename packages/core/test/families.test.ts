@@ -183,7 +183,7 @@ describe('changing the PLC model', () => {
 
 describe('migration and new dialects', () => {
   it('upgrades v1 projects to the generic family', () => {
-    const p = createProject() as unknown as Record<string, any>;
+    const p = createProject() as unknown as { schemaVersion: number; hardware: { family?: string } };
     p.schemaVersion = 1;
     delete p.hardware.family;
     const r = parseProject(JSON.parse(JSON.stringify(p)));

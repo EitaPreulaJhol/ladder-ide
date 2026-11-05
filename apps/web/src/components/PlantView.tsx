@@ -11,6 +11,8 @@ import { TankPlant } from './plants/TankPlant.tsx';
 import type { PlantProps } from './plants/common.tsx';
 import { CheckPanel } from './CheckPanel.tsx';
 
+// Each plant has its own state type; the registry is keyed by scenario id.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const RENDERERS: Record<string, (p: PlantProps<any>) => React.ReactNode> = {
   motor: MotorPlant,
   starDelta: StarDeltaPlant,

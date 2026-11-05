@@ -97,13 +97,14 @@ export function TrendChart({ series, startMs, endMs, markerMs, markerLabel }: Pr
   const x = (tm: number) => LABEL_W + ((tm - startMs) / span) * plotW;
   const tAt = (px: number) => startMs + ((px - LABEL_W) / plotW) * span;
 
-  // Lane geometry
-  let y = TOP;
-  const lanes = series.map((s) => {
+  // Lane geometry: each lane starts below the previous ones.
+  const heights = series.map((s) => (isDigital(s.events) ? LANE_DIGITAL : LANE_ANALOG));
+  const tops = heights.map((_, i) => TOP + heights.slice(0, i).reduce((acc, h) => acc + h + GAP, 0));
+  const y = TOP + heights.reduce((acc, h) => acc + h + GAP, 0);
+  const lanes = series.map((s, i) => {
     const digital = isDigital(s.events);
-    const h = digital ? LANE_DIGITAL : LANE_ANALOG;
-    const top = y;
-    y += h + GAP;
+    const h = heights[i]!;
+    const top = tops[i]!;
     let lo = 0;
     let hi = 1;
     let vMin = 0;

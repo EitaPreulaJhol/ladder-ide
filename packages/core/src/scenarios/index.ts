@@ -16,6 +16,8 @@ export type { TrafficState } from './traffic.ts';
 export type { ConveyorState, Box } from './conveyor.ts';
 export type { TankState } from './tank.ts';
 
+// Scenarios have different state types (motor, tank...): heterogeneous registry.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SCENARIOS: ScenarioDef<any>[] = [
   motorScenario,
   starDeltaScenario,

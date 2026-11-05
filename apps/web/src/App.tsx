@@ -49,14 +49,14 @@ export function App() {
   // Projects with a plant open on the plant tab.
   useEffect(() => {
     if (scenarioId) setDock('plant');
-  }, [scenarioId]);
+  }, [scenarioId, setDock]);
 
   // Editing shows properties; starting the simulation brings back the plant / I/O panel.
   const selectedNode = useProject((s) => s.selection?.nodeId);
   const status = useSim((s) => s.status);
   useEffect(() => {
     if (selectedNode && status === 'stopped') setDock('props');
-  }, [selectedNode, status]);
+  }, [selectedNode, status, setDock]);
   useEffect(() => {
     if (status === 'running')
       // ...unless the user is reading an explanation ("por que?") in the properties tab.
@@ -67,7 +67,7 @@ export function App() {
             : 'panel'
           : d,
       );
-  }, [status]);
+  }, [status, setDock]);
 
   if (boot.status === 'error')
     return (

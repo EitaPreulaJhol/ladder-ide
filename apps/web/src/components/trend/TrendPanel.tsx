@@ -41,7 +41,7 @@ export function TrendPanel() {
   const capture = useSim((s) => s.capture);
   const showCapture = useSim((s) => s.showCapture);
   const [windowMs, setWindowMs] = useState(10_000);
-  const signals = project.trend ?? [];
+  const signals = useMemo(() => project.trend ?? [], [project.trend]);
 
   const options = useMemo(
     () => project.tags.flatMap((tg) => signalsForTag(tg.name, tg.type)).filter((s) => !signals.includes(s)),
@@ -57,6 +57,7 @@ export function TrendPanel() {
       signal: s,
       label: displayOperand(s, project),
       events: tr.events[s] ?? [],
+      format: formatterFor(s, project),
     }));
     start = 0;
     end = Math.max(tr.endMs, 1);
@@ -65,6 +66,7 @@ export function TrendPanel() {
       signal: s,
       label: displayOperand(s, project),
       events: liveTrend.events[s] ?? ([] as TrendEvent[]),
+      format: formatterFor(s, project),
     }));
     end = Math.max(liveTrend.endMs, windowMs);
     start = end - windowMs;

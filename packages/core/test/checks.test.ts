@@ -8,7 +8,6 @@ import {
   no,
   par,
   program,
-  reset,
   rung,
   runScenarioChecks,
   SCENARIO_CHECKS,

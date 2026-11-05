@@ -4,3 +4,4 @@ apps/server/drizzle
 package-lock.json
 test-results
 playwright-report
+.github

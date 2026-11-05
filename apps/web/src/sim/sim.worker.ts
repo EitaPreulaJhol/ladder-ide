@@ -19,6 +19,8 @@ let sim: Simulator | null = null;
 let project: Project | null = null;
 let status: SimStatus = 'stopped';
 let speed = 1;
+// The active scenario's state type is only known at runtime.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let scenario: ScenarioDef<any> | undefined;
 let plantState: unknown = null;
 let lastTick = performance.now();

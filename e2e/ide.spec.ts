@@ -270,3 +270,16 @@ test('field faults: burnt contactor and hidden fault challenge', async ({ page }
   }
   await expect(page.getByTestId('challenge-start')).toBeVisible();
 });
+
+test('trend shows timer accumulators as time', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-blinker').click();
+  await page.getByTestId('trend-tab').click();
+  await page.getByTestId('trend-add').selectOption('T_OFF.ACC');
+  await page.getByTestId('run').click();
+  await page.getByTestId('dock-panel').click();
+  await page.getByTestId('sw-S_HABILITA').click();
+  await page.waitForTimeout(800);
+  await expect(page.locator('.trend-range').first()).toHaveText(/^\d+(ms|[.,]\d+s)$/);
+});

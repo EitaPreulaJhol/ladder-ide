@@ -80,3 +80,11 @@ Os textos ficam em `apps/web/src/locales/pt-BR.json`. Para adicionar um idioma, 
 ## Adicionando um modelo de CLP
 
 Os perfis ficam em `packages/core/src/families.ts`: CPUs (I/O embarcado, limite de módulos), módulos de expansão, regra de endereçamento (`channelAddress`), instruções não suportadas, **fontes** e a lista `unverified` com o que não foi confirmado em documentação oficial. Acrescente casos em `packages/core/test/families.test.ts` com endereços tirados do manual do fabricante.
+
+## Contribuindo
+
+- Trabalhe num branch a partir do `master`: `feat/<assunto>`, `fix/<assunto>` ou `docs/<assunto>`.
+- Antes do PR, rode `npm run check` e `npm run e2e`. A CI (`.github/workflows/ci.yml`) roda tudo isso, mais os testes com PostgreSQL e o build da imagem Docker.
+- Mensagens de commit em português, com um título curto e o detalhe no corpo.
+- Mudou o formato do projeto? Incremente `SCHEMA_VERSION` e adicione a migração em `packages/core/src/migrations.ts`.
+- O roteiro de melhorias está em [`docs/plans.md`](docs/plans.md).

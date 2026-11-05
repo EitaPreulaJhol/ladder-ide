@@ -61,6 +61,8 @@ export interface CheckContext<S> {
   always(predicate: () => boolean, code: string, params?: Record<string, string | number>): void;
 }
 
+// Default `any` lets the per-scenario check lists live in one registry.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ScenarioCheck<S = any> {
   id: string;
   run(ctx: CheckContext<S>): void;

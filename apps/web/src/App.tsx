@@ -1,0 +1,137 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useProject, type View } from './store/project.ts';
+import { useSim } from './store/sim.ts';
+import { TopBar } from './components/TopBar.tsx';
+import { LadderEditor, useEditorShortcuts } from './components/editor/LadderEditor.tsx';
+import { Properties } from './components/editor/Properties.tsx';
+import { BottomPanel } from './components/BottomPanel.tsx';
+import { IoPanel } from './components/IoPanel.tsx';
+import { PlantView } from './components/PlantView.tsx';
+import { TagsView } from './components/TagsView.tsx';
+import { HardwareView } from './components/HardwareView.tsx';
+import { ProjectsView } from './components/ProjectsView.tsx';
+import { bootLocal, bootShared, forkShared, startAutosave } from './session.ts';
+
+const NAV: { id: View; icon: string }[] = [
+  { id: 'editor', icon: '⊢' },
+  { id: 'tags', icon: '#' },
+  { id: 'hardware', icon: '▦' },
+  { id: 'projects', icon: '☰' },
+];
+
+type DockTab = 'props' | 'panel' | 'plant';
+
+export function App() {
+  const { t } = useTranslation();
+  const [boot, setBoot] = useState<{ status: 'loading' | 'ready' | 'error'; error?: string }>({
+    status: 'loading',
+  });
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const loaded = useProject((s) => s.project !== null);
+  const view = useProject((s) => s.view);
+  const sharedId = useProject((s) => s.sharedId);
+  const scenarioId = useProject((s) => s.project?.scenarioId);
+  const setView = useProject((s) => s.setView);
+  const [dock, setDock] = useState<DockTab>('panel');
+  useEditorShortcuts();
+
+  useEffect(() => {
+    const m = /^\/s\/([A-Za-z0-9_-]+)\/?$/.exec(location.pathname);
+    const p = m ? bootShared(m[1]!) : bootLocal();
+    p.then(() => setBoot({ status: 'ready' })).catch((e: Error) =>
+      setBoot({ status: 'error', error: e.message }),
+    );
+    const unsub = startAutosave(() => setSavedAt(Date.now()));
+    return unsub;
+  }, []);
+
+  // Projects with a plant open on the plant tab.
+  useEffect(() => {
+    if (scenarioId) setDock('plant');
+  }, [scenarioId]);
+
+  // Editing shows properties; starting the simulation brings back the plant / I/O panel.
+  const selectedNode = useProject((s) => s.selection?.nodeId);
+  const status = useSim((s) => s.status);
+  useEffect(() => {
+    if (selectedNode && status === 'stopped') setDock('props');
+  }, [selectedNode, status]);
+  useEffect(() => {
+    if (status === 'running')
+      setDock((d) => (d === 'props' ? (useProject.getState().project.scenarioId ? 'plant' : 'panel') : d));
+  }, [status]);
+
+  if (boot.status === 'error')
+    return (
+      <div className="boot">
+        <p>{boot.error === 'notFound' ? t('shared.notFound') : t('shared.error', { error: boot.error })}</p>
+        <a href="/">{t('shared.backHome')}</a>
+      </div>
+    );
+  if (boot.status === 'loading' || !loaded) return <div className="boot">{t('shared.loading')}</div>;
+
+  return (
+    <div className="app">
+      <TopBar savedAt={savedAt} />
+      {sharedId && (
+        <div className="shared-banner">
+          <span>{t('shared.banner')}</span>
+          <button className="primary" onClick={() => void forkShared()} data-testid="fork">
+            {t('shared.fork')}
+          </button>
+        </div>
+      )}
+      <div className="workspace">
+        <nav className="sidenav">
+          {NAV.map((n) => (
+            <button
+              key={n.id}
+              className={view === n.id ? 'active' : ''}
+              onClick={() => setView(n.id)}
+              data-testid={`nav-${n.id}`}
+            >
+              <span className="nav-icon">{n.icon}</span>
+              <span>{t(`nav.${n.id}`)}</span>
+            </button>
+          ))}
+        </nav>
+        <main className="main">
+          <div className="center">
+            {view === 'editor' && <LadderEditor />}
+            {view === 'tags' && <TagsView />}
+            {view === 'hardware' && <HardwareView />}
+            {view === 'projects' && <ProjectsView />}
+          </div>
+          <BottomPanel />
+        </main>
+        <aside className="dock">
+          <div className="tabs">
+            <button className={dock === 'props' ? 'active' : ''} onClick={() => setDock('props')}>
+              {t('props.title')}
+            </button>
+            <button
+              className={dock === 'panel' ? 'active' : ''}
+              onClick={() => setDock('panel')}
+              data-testid="dock-panel"
+            >
+              {t('panel.title')}
+            </button>
+            <button
+              className={dock === 'plant' ? 'active' : ''}
+              onClick={() => setDock('plant')}
+              data-testid="dock-plant"
+            >
+              {t('plant.title')}
+            </button>
+          </div>
+          <div className="dock-body">
+            {dock === 'props' && <Properties />}
+            {dock === 'panel' && <IoPanel />}
+            {dock === 'plant' && <PlantView />}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}

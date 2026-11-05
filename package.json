@@ -1,0 +1,31 @@
+{
+  "name": "ladder-ide",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,server -c cyan,magenta \"npm run dev -w @ladder/web\" \"npm run dev -w @ladder/server\"",
+    "dev:web": "npm run dev -w @ladder/web",
+    "build": "npm run build -w @ladder/web",
+    "start": "npm run start -w @ladder/server",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/core && tsc -p apps/web && tsc -p apps/server",
+    "e2e": "playwright test",
+    "format": "prettier --write .",
+    "db:up": "docker compose up -d db",
+    "test:db": "TEST_DATABASE_URL=postgres://ladder:ladder@localhost:5432/ladder vitest run apps/server"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "concurrently": "^10.0.6",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

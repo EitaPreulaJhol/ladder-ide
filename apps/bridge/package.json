@@ -1,0 +1,19 @@
+{
+  "name": "@ladder/bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ponte local Modbus TCP para a LADDER IDE: IHM/SCADA real <-> simulação no navegador.",
+  "bin": {
+    "ladder-bridge": "src/index.ts"
+  },
+  "scripts": {
+    "start": "node src/index.ts"
+  },
+  "dependencies": {
+    "ws": "^8.22.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
+}

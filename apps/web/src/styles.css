@@ -2316,3 +2316,35 @@ table.grid tr.unused td {
   flex-direction: column;
   gap: 8px;
 }
+
+/* ------------------------------------------------------------ Modbus bridge */
+
+.modbus {
+  margin-top: 24px;
+}
+.modbus-cmd {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font: 13px var(--mono);
+  width: fit-content;
+}
+.modbus-connect {
+  align-items: center;
+  margin: 8px 0;
+}
+.modbus-status {
+  font: 600 12px var(--mono);
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bit-bg);
+}
+.modbus-status.connected {
+  background: var(--status-run-bg);
+  color: var(--status-run-text);
+}
+.modbus-status.error {
+  background: var(--status-stop-bg);
+  color: var(--status-stop-text);
+}

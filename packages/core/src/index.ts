@@ -22,3 +22,4 @@ export * from './faults.ts';
 export * from './grafcet.ts';
 export * from './xml.ts';
 export * from './plcopen.ts';
+export * from './modbus.ts';

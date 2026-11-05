@@ -21,6 +21,7 @@ import {
 } from '@ladder/core';
 import { useProject } from '../store/project.ts';
 import { downloadText, safeFileName } from '../storage/db.ts';
+import { ModbusPanel } from './ModbusPanel.tsx';
 
 const KIND_COLOR: Record<string, string> = {
   PS: '#a855f7',
@@ -391,6 +392,7 @@ export function HardwareView() {
           ))}
         </tbody>
       </table>
+      <ModbusPanel />
     </div>
   );
 }

@@ -743,5 +743,43 @@
       "nav": "Navegación",
       "trend": "Gráfico"
     }
+  },
+  "modbus": {
+    "title": "Puente Modbus TCP (HMI / SCADA real)",
+    "help": "Conecta una HMI o SCADA real a la simulación. Ejecuta el puente en esta máquina (Node 24+) desde la carpeta del proyecto, indica el puerto y el código de emparejamiento que muestra y haz clic en Conectar. La HMI se conecta al Modbus TCP del puente (puerto 5020 por defecto).",
+    "security": "El puente solo acepta esta página con el código de emparejamiento y, por defecto, solo atiende Modbus en localhost. Usa --lan solo en redes de laboratorio: Modbus no tiene autenticación.",
+    "port": "Puerto del puente",
+    "token": "Código de emparejamiento",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "requests": "{{n}} peticiones Modbus",
+    "badToken": "Código de emparejamiento incorrecto.",
+    "unreachable": "No se encontró el puente en este puerto. ¿Está ejecutándose en esta máquina?",
+    "map": "Mapa Modbus",
+    "auto": "automático (bits en coils, números en holding registers)",
+    "custom": "personalizado",
+    "customize": "Personalizar mapa",
+    "regenerate": "Generar de nuevo",
+    "useAuto": "Volver al automático",
+    "area": "Área",
+    "address": "Dirección",
+    "reference": "Referencia",
+    "status": {
+      "idle": "desconectado",
+      "connecting": "conectando…",
+      "connected": "conectado",
+      "error": "error"
+    },
+    "areas": {
+      "coil": "Coil (lectura/escritura)",
+      "discrete": "Discrete input (lectura)",
+      "holding": "Holding register (lectura/escritura)",
+      "input": "Input register (lectura)"
+    },
+    "issue": {
+      "unknownTag": "{{tag}}: el tag no existe",
+      "wrongArea": "{{tag}}: área incompatible con el tipo",
+      "overlap": "{{tag}}: dirección superpuesta con {{other}}"
+    }
   }
 }

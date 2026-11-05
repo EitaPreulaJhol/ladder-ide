@@ -5,6 +5,7 @@ COPY package.json package-lock.json ./
 COPY packages/core/package.json packages/core/
 COPY apps/web/package.json apps/web/
 COPY apps/server/package.json apps/server/
+COPY apps/bridge/package.json apps/bridge/
 RUN npm ci --ignore-scripts
 COPY . .
 RUN npm run build
@@ -17,6 +18,7 @@ COPY package.json package-lock.json ./
 COPY packages/core/package.json packages/core/
 COPY apps/web/package.json apps/web/
 COPY apps/server/package.json apps/server/
+COPY apps/bridge/package.json apps/bridge/
 RUN npm ci --omit=dev --ignore-scripts --workspace=@ladder/server --include-workspace-root=false && npm cache clean --force
 COPY packages/core/src packages/core/src
 COPY apps/server/src apps/server/src

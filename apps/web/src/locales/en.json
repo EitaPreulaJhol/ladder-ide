@@ -743,5 +743,43 @@
       "nav": "Navigation",
       "trend": "Chart"
     }
+  },
+  "modbus": {
+    "title": "Modbus TCP bridge (real HMI / SCADA)",
+    "help": "Connect a real HMI or SCADA to the simulation. Run the bridge on this machine (Node 24+) from the project folder, enter the port and the pairing code it shows and click Connect. The HMI connects to the bridge's Modbus TCP (port 5020 by default).",
+    "security": "The bridge only accepts this page with the pairing code and, by default, only serves Modbus on localhost. Use --lan only on lab networks: Modbus has no authentication.",
+    "port": "Bridge port",
+    "token": "Pairing code",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "requests": "{{n}} Modbus requests",
+    "badToken": "Wrong pairing code.",
+    "unreachable": "Bridge not found on this port. Is it running on this machine?",
+    "map": "Modbus map",
+    "auto": "automatic (bits as coils, numbers as holding registers)",
+    "custom": "custom",
+    "customize": "Customize map",
+    "regenerate": "Regenerate",
+    "useAuto": "Back to automatic",
+    "area": "Area",
+    "address": "Address",
+    "reference": "Reference",
+    "status": {
+      "idle": "disconnected",
+      "connecting": "connecting…",
+      "connected": "connected",
+      "error": "error"
+    },
+    "areas": {
+      "coil": "Coil (read/write)",
+      "discrete": "Discrete input (read)",
+      "holding": "Holding register (read/write)",
+      "input": "Input register (read)"
+    },
+    "issue": {
+      "unknownTag": "{{tag}}: tag does not exist",
+      "wrongArea": "{{tag}}: area does not match the type",
+      "overlap": "{{tag}}: address overlaps {{other}}"
+    }
   }
 }

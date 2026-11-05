@@ -490,3 +490,55 @@ test('HMI: screen from the I/O panel, add a bar and operate it', async ({ page }
   await page.getByTestId('nav-hmi').click();
   await expect(page.getByTestId('hmi-w-bar-PECAS')).toBeVisible();
 });
+
+test('Modbus TCP bridge: a real Modbus client operates the simulation', async ({ page }) => {
+  const { spawn } = await import('node:child_process');
+  const net = await import('node:net');
+  const bridge = spawn(
+    process.execPath,
+    ['apps/bridge/src/index.ts', '--token', 'E2ETOKEN', '--ws-port', '18765', '--modbus-port', '15020'],
+    {
+      stdio: 'pipe',
+    },
+  );
+  try {
+    await new Promise<void>((resolve, reject) => {
+      bridge.stdout!.on('data', (d: Buffer) => d.toString().includes('Código de pareamento') && resolve());
+      bridge.once('exit', (c) => reject(new Error(`bridge exited ${c}`)));
+    });
+
+    await page.goto('/');
+    await page.getByTestId('nav-projects').click();
+    await page.getByTestId('example-sealIn').click();
+    await page.getByTestId('nav-hardware').click();
+    await page.getByTestId('modbus-port').fill('18765');
+    await page.getByTestId('modbus-token').fill('e2etoken'); // case-insensitive
+    await page.getByTestId('modbus-connect').click();
+    await expect(page.getByTestId('modbus-status')).toContainText('conectada');
+    await page.getByTestId('run').click();
+
+    // Automatic map of the seal-in example: B_LIGA = coil 0, B_DESLIGA = coil 1, K_LAMPADA = coil 2.
+    const sock = net.connect(15020, '127.0.0.1');
+    await new Promise((r) => sock.once('connect', r));
+    let tid = 0;
+    const req = (pdu: number[]) =>
+      new Promise<Buffer>((resolve) => {
+        const h = Buffer.from([0, ++tid, 0, 0, 0, pdu.length + 1, 1]);
+        sock.once('data', (d: Buffer) => resolve(d.subarray(7)));
+        sock.write(Buffer.concat([h, Buffer.from(pdu)]));
+      });
+    const readLamp = async () => ((await req([1, 0, 2, 0, 1]))[2]! & 1) === 1;
+
+    await expect.poll(readLamp).toBe(false);
+    await req([5, 0, 0, 0xff, 0]); // HMI presses "Liga"
+    await page.waitForTimeout(200);
+    await req([5, 0, 0, 0, 0]); // and releases it
+    await expect.poll(readLamp, { timeout: 5000 }).toBe(true); // sealed in
+    await page.getByTestId('dock-panel').click();
+    await expect(page.getByTestId('lamp-K_LAMPADA')).toHaveClass(/on/);
+    await expect(page.getByTestId('modbus-status')).toContainText('requisições');
+    sock.destroy();
+  } finally {
+    bridge.kill();
+  }
+});

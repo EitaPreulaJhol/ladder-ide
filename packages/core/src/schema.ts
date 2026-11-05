@@ -142,6 +142,19 @@ export const ProjectSchema = z.object({
   trend: z.array(text(80)).max(32).optional(),
   grafcets: z.array(GrafcetSchema).max(20).optional(),
   hmi: HmiSchema.optional(),
+  modbus: z
+    .object({
+      map: z
+        .array(
+          z.object({
+            tag: text(64),
+            area: z.enum(['coil', 'discrete', 'holding', 'input']),
+            address: z.number().int().min(0).max(65535),
+          }),
+        )
+        .max(2000),
+    })
+    .optional(),
 });
 
 const MAX_DEPTH = 40;

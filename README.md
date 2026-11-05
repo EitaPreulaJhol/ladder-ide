@@ -79,6 +79,18 @@ curl -X POST -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/sh
 curl -X DELETE -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/shares/ID        # remove
 ```
 
+## Ponte Modbus TCP (IHM / SCADA real)
+
+Para ligar uma IHM ou SCADA de verdade à simulação que roda no navegador:
+
+```bash
+npm run bridge                 # ou: node apps/bridge/src/index.ts [--modbus-port 5020] [--ws-port 8765] [--lan]
+```
+
+A ponte mostra um **código de pareamento**. Na IDE, abra Hardware → Ponte Modbus TCP, informe a porta (8765) e o código, e conecte. A IHM então acessa o Modbus TCP da ponte (porta 5020): bits em coils, números em holding registers (mapa automático ou personalizado; DINT/REAL em 2 registradores, palavra alta primeiro).
+
+- **Segurança:** o WebSocket só escuta em `127.0.0.1` e exige o código; o Modbus escuta só em localhost, a menos que se use `--lan`. Modbus não tem autenticação, então use `--lan` só em rede de laboratório.
+
 ## API
 
 | Método | Rota              | Descrição                                                                                        |

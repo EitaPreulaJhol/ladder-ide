@@ -48,7 +48,7 @@ export const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' ws://127.0.0.1:* ws://localhost:*",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

@@ -229,6 +229,15 @@ export interface HmiScreen {
   widgets: HmiWidget[];
 }
 
+export type ModbusArea = 'coil' | 'discrete' | 'holding' | 'input';
+
+/** One tag exposed through the Modbus TCP bridge. DINT/REAL take two registers. */
+export interface ModbusEntry {
+  tag: string;
+  area: ModbusArea;
+  address: number;
+}
+
 export const HMI_WIDTH = 800;
 export const HMI_HEIGHT = 480;
 
@@ -261,6 +270,7 @@ export interface Project {
   trend?: string[];
   grafcets?: Grafcet[];
   hmi?: { screens: HmiScreen[] };
+  modbus?: { map: ModbusEntry[] };
 }
 
 // ---------------------------------------------------------------- runtime values

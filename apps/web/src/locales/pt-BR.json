@@ -743,5 +743,43 @@
       "nav": "Navegação",
       "trend": "Gráfico"
     }
+  },
+  "modbus": {
+    "title": "Ponte Modbus TCP (IHM / SCADA real)",
+    "help": "Conecte uma IHM ou SCADA de verdade à simulação. Rode a ponte nesta máquina (Node 24+) a partir da pasta do projeto, informe a porta e o código de pareamento que ela mostra e clique em Conectar. A IHM se conecta ao Modbus TCP da ponte (porta 5020 por padrão).",
+    "security": "A ponte só aceita esta página com o código de pareamento e, por padrão, só atende Modbus em localhost. Use --lan apenas em redes de laboratório: Modbus não tem autenticação.",
+    "port": "Porta da ponte",
+    "token": "Código de pareamento",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "requests": "{{n}} requisições Modbus",
+    "badToken": "Código de pareamento incorreto.",
+    "unreachable": "Ponte não encontrada nesta porta. Ela está rodando nesta máquina?",
+    "map": "Mapa Modbus",
+    "auto": "automático (bits em coils, números em holding registers)",
+    "custom": "personalizado",
+    "customize": "Personalizar mapa",
+    "regenerate": "Gerar de novo",
+    "useAuto": "Voltar ao automático",
+    "area": "Área",
+    "address": "Endereço",
+    "reference": "Referência",
+    "status": {
+      "idle": "desconectada",
+      "connecting": "conectando…",
+      "connected": "conectada",
+      "error": "erro"
+    },
+    "areas": {
+      "coil": "Coil (leitura/escrita)",
+      "discrete": "Discrete input (leitura)",
+      "holding": "Holding register (leitura/escrita)",
+      "input": "Input register (leitura)"
+    },
+    "issue": {
+      "unknownTag": "{{tag}}: tag não existe",
+      "wrongArea": "{{tag}}: área incompatível com o tipo",
+      "overlap": "{{tag}}: endereço sobreposto a {{other}}"
+    }
   }
 }

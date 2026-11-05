@@ -14,6 +14,8 @@ Ambiente web aberto (sem login) para **treinar, testar e planejar** programas La
 - **Plantas virtuais com exercícios** — partida direta, estrela-triângulo, semáforo, esteira seletora, controle de nível liga/desliga e controle de nível com PID, cada uma com enunciado, solução de referência e correção automática.
 - **Modelos reais de CLP** — Siemens S7-1200 (1211C/1212C/1214C/1215C), Allen-Bradley MicroLogix 1100/1400, Schneider Modicon M221 e Haiwell séries C/T: I/O embarcado, módulos de expansão com códigos de catálogo, limite de módulos por CPU, endereçamento padrão de cada fabricante e aviso de instruções que o modelo não tem. Dados tirados de manuais oficiais (fontes listadas na tela); pontos não confirmados aparecem marcados como "a confirmar".
 - **Planejamento de hardware** — rack genérico ou do modelo escolhido; endereços calculados automaticamente; lista de I/O e tags em CSV; versão para impressão.
+- **Funciona offline e pode ser instalado** (PWA): depois da primeira visita, editor, simulação e projetos salvos funcionam sem internet.
+- **Documentação do projeto** pronta para imprimir ou salvar em PDF: capa, programas, tags com referência cruzada e lista de I/O.
 - **Tema claro/escuro** — botão na barra superior alterna entre automático (segue o sistema), claro e escuro; a escolha fica salva no navegador.
 - **Projetos** salvos no navegador (IndexedDB) + exportar/importar `.ladder.json`; **links compartilháveis** imutáveis (snapshot) que qualquer pessoa pode abrir, simular e copiar (fork).
 

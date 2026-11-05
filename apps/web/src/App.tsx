@@ -13,12 +13,14 @@ import { PlantView } from './components/PlantView.tsx';
 import { TagsView } from './components/TagsView.tsx';
 import { HardwareView } from './components/HardwareView.tsx';
 import { ProjectsView } from './components/ProjectsView.tsx';
+import { DocView } from './components/DocView.tsx';
 import { bootLocal, bootShared, forkShared, startAutosave } from './session.ts';
 
 const NAV: { id: View; icon: string }[] = [
   { id: 'editor', icon: '⊢' },
   { id: 'tags', icon: '#' },
   { id: 'hardware', icon: '▦' },
+  { id: 'doc', icon: '🖨' },
   { id: 'projects', icon: '☰' },
 ];
 
@@ -29,6 +31,12 @@ export function App() {
   });
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [reporting, setReporting] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
+  useEffect(() => {
+    const on = () => setUpdateReady(true);
+    window.addEventListener('ladder:update', on);
+    return () => window.removeEventListener('ladder:update', on);
+  }, []);
   const loaded = useProject((s) => s.project !== null);
   const view = useProject((s) => s.view);
   const sharedId = useProject((s) => s.sharedId);
@@ -87,6 +95,14 @@ export function App() {
   return (
     <div className="app">
       <TopBar savedAt={savedAt} />
+      {updateReady && (
+        <div className="update-banner" role="status">
+          <span>{t('pwa.updateReady')}</span>
+          <button className="primary" onClick={() => location.reload()}>
+            {t('pwa.reload')}
+          </button>
+        </div>
+      )}
       {sharedId && (
         <div className="shared-banner">
           <span>{t('shared.banner')}</span>
@@ -118,6 +134,7 @@ export function App() {
             {view === 'editor' && <LadderEditor />}
             {view === 'tags' && <TagsView />}
             {view === 'hardware' && <HardwareView />}
+            {view === 'doc' && <DocView />}
             {view === 'projects' && <ProjectsView />}
           </div>
           <BottomPanel />

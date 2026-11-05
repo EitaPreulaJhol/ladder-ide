@@ -33,6 +33,10 @@ export default defineConfig(
     languageOptions: { globals: globals.node },
   },
   {
+    files: ['apps/web/sw-template.js'],
+    languageOptions: { globals: { ...globals.serviceworker, __FILES__: 'readonly' } },
+  },
+  {
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',

@@ -7,7 +7,8 @@
     "editor": "Programa",
     "tags": "Tags",
     "hardware": "Hardware",
-    "projects": "Projetos"
+    "projects": "Projetos",
+    "doc": "Documentação"
   },
   "top": {
     "dialect": "Dialeto",
@@ -609,5 +610,30 @@
     "send": "Enviar denúncia",
     "thanks": "Obrigado. A denúncia foi registrada.",
     "error": "Não foi possível enviar: {{error}}"
+  },
+  "pwa": {
+    "offline": "offline",
+    "offlineHint": "Sem conexão. Edição, simulação e projetos salvos continuam funcionando; só o compartilhamento precisa de internet.",
+    "shareOffline": "Compartilhar precisa de conexão com a internet",
+    "updateReady": "Uma nova versão da LADDER IDE foi instalada.",
+    "reload": "Recarregar"
+  },
+  "doc": {
+    "title": "Documentação do projeto",
+    "print": "Imprimir / salvar PDF",
+    "help": "Prévia do documento: programas, tags com referências, lista de I/O. Use “Imprimir” e escolha “Salvar como PDF” para gerar o arquivo (página A4 paisagem).",
+    "plc": "CLP",
+    "programs": "Programas",
+    "sub": "sub-rotina",
+    "main": "programa principal",
+    "counts": "Tamanho",
+    "countsValue": "{{rungs}} rungs · {{tags}} tags · {{io}} pontos de I/O em uso",
+    "status": "Verificação",
+    "withErrors": "{{n}} erro(s) de validação",
+    "noErrors": "sem erros de validação",
+    "generated": "Gerado em",
+    "tags": "Tags e referência cruzada",
+    "usedIn": "Usada em",
+    "xrefLegend": "Rn = rung onde a tag aparece; * = escrita (bobina, destino, temporizador/contador)."
   }
 }

@@ -342,3 +342,33 @@ test('share with expiration and report a shared link', async ({ page }) => {
   await expect(page.getByTestId('report-done')).toBeVisible();
   expect(cspErrors).toEqual([]);
 });
+
+test('works offline after the first visit (service worker)', async ({ page, context }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('nav-editor')).toBeVisible();
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByTestId('nav-editor')).toBeVisible();
+  await expect(page.getByTestId('offline')).toBeVisible();
+  await expect(page.getByTestId('share')).toBeDisabled();
+  // The simulator works offline too.
+  await page.getByTestId('run').click();
+  await expect(page.getByTestId('plc-status')).toHaveText('RUN');
+  await context.setOffline(false);
+});
+
+test('project documentation lists programs, tags and I/O', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-subroutines').click();
+  await page.getByTestId('nav-doc').click();
+  await expect(page.locator('.doc-cover h1')).toHaveText('Exemplo: sub-rotinas e saltos');
+  await expect(page.locator('.doc-program h2')).toHaveCount(2);
+  await expect(page.locator('.doc-program').nth(1)).toContainText('sub-rotina');
+  await expect(page.locator('.doc-rung')).toHaveCount(6);
+  await expect(page.locator('.doc-table').first()).toContainText('H_ALARME');
+  await expect(page.getByTestId('doc-print')).toBeVisible();
+});

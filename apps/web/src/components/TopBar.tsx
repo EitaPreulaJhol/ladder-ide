@@ -5,6 +5,7 @@ import { useProject } from '../store/project.ts';
 import { useSim } from '../store/sim.ts';
 import { downloadText, safeFileName } from '../storage/db.ts';
 import { ShareDialog } from './ShareDialog.tsx';
+import { useOnline } from '../pwa.ts';
 import { formatMs } from './editor/format.ts';
 import { getThemePref, NEXT_THEME, setThemePref, type ThemePref } from '../theme.ts';
 
@@ -26,6 +27,7 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
   const [sharing, setSharing] = useState(false);
   const [theme, setTheme] = useState<ThemePref>(getThemePref);
   const dialectLocked = project.hardware.family !== 'generic';
+  const online = useOnline();
 
   return (
     <header className="topbar">
@@ -130,7 +132,18 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
       >
         ⤓ <span className="label-wide">{t('top.export')}</span>
       </button>
-      <button className="primary" onClick={() => setSharing(true)} data-testid="share" title={t('top.share')}>
+      {!online && (
+        <span className="offline-badge" title={t('pwa.offlineHint')} data-testid="offline">
+          {t('pwa.offline')}
+        </span>
+      )}
+      <button
+        className="primary"
+        onClick={() => setSharing(true)}
+        data-testid="share"
+        disabled={!online}
+        title={online ? t('top.share') : t('pwa.shareOffline')}
+      >
         🔗 <span className="label-wide">{t('top.share')}</span>
       </button>
       {sharing && <ShareDialog onClose={() => setSharing(false)} />}

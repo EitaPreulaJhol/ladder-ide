@@ -46,7 +46,7 @@ export interface Cursor extends SlotRef {
 
 type Clip = { kind: 'rung'; rung: Rung } | { kind: 'node'; node: LadderNode };
 
-export type View = 'editor' | 'tags' | 'hardware' | 'projects';
+export type View = 'editor' | 'tags' | 'hardware' | 'doc' | 'projects';
 
 interface State {
   project: Project;

@@ -1358,13 +1358,22 @@ table.grid tr.unused td {
 }
 
 @media print {
-  :root {
+  /* Paper is always light, whatever theme is on screen. */
+  :root,
+  :root[data-theme='light'],
+  :root[data-theme='dark'],
+  :root:not([data-theme='dark']) {
     --bg: #fff;
     --panel: #fff;
     --panel-2: #fff;
     --text: #000;
     --muted: #333;
     --border: #999;
+    --wire: #444;
+    --mnemonic: #1d4ed8;
+    --comment: #333;
+    --module-bg: #fff;
+    --rack-bg: #fff;
   }
   .topbar,
   .sidenav,
@@ -1932,4 +1941,91 @@ table.grid tr.unused td {
 }
 .shared-banner .link {
   margin-left: auto;
+}
+
+/* ------------------------------------------------------------ offline / updates */
+
+.offline-badge {
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--status-pause-bg);
+  color: var(--status-pause-text);
+}
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: var(--banner-bg);
+  border-bottom: 1px solid var(--accent);
+}
+
+/* ------------------------------------------------------------ project documentation */
+
+.doc-cover {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0 20px;
+  background: var(--panel);
+}
+.doc-cover h1 {
+  margin: 0 0 6px;
+}
+.doc-cover dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+}
+.doc-cover dt {
+  color: var(--muted);
+}
+.doc-cover dd {
+  margin: 0;
+}
+.doc-program h2,
+.doc-section h2 {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 4px;
+  margin-top: 24px;
+}
+.doc-rung .rung-gutter {
+  cursor: default;
+}
+.doc-table td {
+  vertical-align: top;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  .doc-cover {
+    background: #fff;
+    border-color: #999;
+  }
+  .doc-program {
+    break-before: page;
+  }
+  .doc-rung {
+    break-inside: avoid;
+    zoom: 0.85;
+  }
+  .doc-section {
+    break-before: page;
+  }
+  .doc .rung-comment {
+    color: #333;
+  }
+  .doc .w,
+  .doc .rail {
+    stroke: #444;
+  }
+  .doc .bitfill.on {
+    fill: transparent;
+  }
 }

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   crossReference,
   findNode,
+  forEachElement,
   getDialect,
   INSTRUCTIONS,
   INSTRUCTION_IDS,
@@ -76,27 +77,46 @@ export function Properties() {
         return (
           <div key={`${el.id}-${i}-${el.operands[i]}`} className="field">
             <label htmlFor={inputId}>{t(`operand.${spec.label}`)}</label>
-            <input
-              id={inputId}
-              data-operand={i}
-              list="tag-names"
-              defaultValue={el.operands[i] ?? ''}
-              readOnly={readOnly}
-              spellCheck={false}
-              placeholder={t('props.hintOperand', { example: EXAMPLE_ADDR[project.dialect] })}
-              onBlur={(e) => setOperand(rung.id, el.id, i, e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setOperand(rung.id, el.id, i, (e.target as HTMLInputElement).value);
-                  const next = document.querySelector<HTMLInputElement>(
-                    `.props input[data-operand="${i + 1}"]`,
-                  );
-                  if (next) next.focus();
-                  else (e.target as HTMLInputElement).blur();
-                }
-                if (e.key === 'Escape') (e.target as HTMLInputElement).blur();
-              }}
-            />
+            {spec.kind === 'program' ? (
+              <select
+                id={inputId}
+                data-operand={i}
+                value={el.operands[i] ?? ''}
+                disabled={readOnly}
+                onChange={(e) => setOperand(rung.id, el.id, i, e.target.value)}
+              >
+                <option value="">{t('props.chooseProgram')}</option>
+                {project.programs
+                  .filter((p) => p.id !== program.id)
+                  .map((p) => (
+                    <option key={p.id} value={p.name}>
+                      {p.kind === 'sub' ? 'ƒ' : '▶'} {p.name}
+                    </option>
+                  ))}
+              </select>
+            ) : (
+              <input
+                id={inputId}
+                data-operand={i}
+                list={spec.kind === 'label' ? 'label-names' : 'tag-names'}
+                defaultValue={el.operands[i] ?? ''}
+                readOnly={readOnly}
+                spellCheck={false}
+                placeholder={t('props.hintOperand', { example: EXAMPLE_ADDR[project.dialect] })}
+                onBlur={(e) => setOperand(rung.id, el.id, i, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setOperand(rung.id, el.id, i, (e.target as HTMLInputElement).value);
+                    const next = document.querySelector<HTMLInputElement>(
+                      `.props input[data-operand="${i + 1}"]`,
+                    );
+                    if (next) next.focus();
+                    else (e.target as HTMLInputElement).blur();
+                  }
+                  if (e.key === 'Escape') (e.target as HTMLInputElement).blur();
+                }}
+              />
+            )}
             <small className="muted">
               {tag && t('props.tagInfo', { type: tag.type, address: tagAddress(tag, project) || '—' })}
               {tag?.comment ? ` · ${tag.comment}` : ''}
@@ -127,6 +147,11 @@ export function Properties() {
         );
       })}
       <p className="help muted">{t('props.newTagCreated')}</p>
+      <datalist id="label-names">
+        {labelsOf(program).map((l) => (
+          <option key={l} value={l} />
+        ))}
+      </datalist>
       <datalist id="tag-names">
         {project.tags.map((tg) => (
           <option key={tg.name} value={tg.name}>
@@ -136,4 +161,13 @@ export function Properties() {
       </datalist>
     </div>
   );
+}
+
+function labelsOf(prog: { rungs: { body: import('@ladder/core').Series }[] }): string[] {
+  const out = new Set<string>();
+  for (const r of prog.rungs)
+    forEachElement(r.body, (el) => {
+      if (el.instr === 'LBL' && el.operands[0]?.trim()) out.add(el.operands[0].trim());
+    });
+  return [...out];
 }

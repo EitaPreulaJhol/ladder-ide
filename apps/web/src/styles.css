@@ -1875,3 +1875,49 @@ table.grid tr.unused td {
   color: var(--status-run-text);
   font-weight: 600;
 }
+
+.label-flag {
+  fill: var(--panel-2);
+  stroke: var(--mnemonic);
+  stroke-width: 1.5;
+}
+
+/* ------------------------------------------------------------ program tabs */
+
+.program-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px 0;
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+.program-tab {
+  border-radius: 6px 6px 0 0;
+  border-bottom: none;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-weight: 600;
+}
+.program-tab.active {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--accent);
+  box-shadow: inset 0 2px var(--accent);
+}
+.program-tab.sub .program-kind {
+  font-style: italic;
+  color: var(--mnemonic);
+}
+.program-add {
+  border-style: dashed;
+  color: var(--muted);
+  font-size: 12px;
+}
+.program-actions {
+  display: flex;
+  gap: 2px;
+}
+.program-rename {
+  width: 160px;
+}

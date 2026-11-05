@@ -1,7 +1,7 @@
 /** Static checks shown in the editor's problems panel. Messages are i18n keys (`diag.<code>`). */
 import type { Element, Project, Series, Tag } from './model.ts';
 import { INSTRUCTIONS, type OperandKind } from './instructions.ts';
-import { NUMERIC_MEMBERS, parseOperand } from './operand.ts';
+import { isValidTagName, NUMERIC_MEMBERS, parseOperand } from './operand.ts';
 import { channelType, isInputTag, tagAddress } from './hardware.ts';
 import { forEachElement } from './edit.ts';
 import { familyCpu, getFamily } from './families.ts';
@@ -24,11 +24,25 @@ function checkOperand(
   text: string | undefined,
   tags: Map<string, Tag>,
 ): { code: string; params?: Record<string, string> } | null {
+  if (kind === 'label' || kind === 'program') {
+    // Names, not tags: checked against labels / programs in validateProject.
+    const name = (text ?? '').trim();
+    if (!name) return { code: 'missingOperand' };
+    return isValidTagName(name) || kind === 'program'
+      ? null
+      : { code: 'invalidOperand', params: { text: name } };
+  }
   const p = parseOperand(text);
   if (p.kind === 'empty') return { code: 'missingOperand' };
   if (p.kind === 'invalid') return { code: 'invalidOperand', params: { text: p.text } };
   if (p.kind === 'literal') {
-    if (kind === 'numberDest' || kind === 'timer' || kind === 'counter' || kind === 'timerOrCounter')
+    if (
+      kind === 'numberDest' ||
+      kind === 'bitDest' ||
+      kind === 'timer' ||
+      kind === 'counter' ||
+      kind === 'timerOrCounter'
+    )
       return { code: 'literalNotAllowed' };
     return null;
   }
@@ -39,6 +53,9 @@ function checkOperand(
   const mismatch = (expected: string) => ({ code: 'typeMismatch', params: { name: text!.trim(), expected } });
   if (p.member && !isStruct) return { code: 'invalidMember', params: { name: p.name } };
   switch (kind) {
+    case 'bitDest':
+      if (p.member) return mismatch('BOOL');
+      return t === 'BOOL' ? null : mismatch('BOOL');
     case 'bit':
       if (p.member) return NUMERIC_MEMBERS.has(p.member) ? mismatch('BOOL') : null;
       return t === 'BOOL' ? null : mismatch('BOOL');
@@ -127,6 +144,8 @@ export function validateProject(project: Project): Diagnostic[] {
     }
   }
 
+  checkProgramFlow(project, out);
+
   for (const [name, n] of coilUses)
     if (n > 1)
       out.push({ severity: 'warning', code: 'duplicateCoil', params: { name, count: n }, tag: name });
@@ -188,4 +207,95 @@ function checkOutputsLast(series: Series, report: (el: Element) => void): void {
       if (!onlyOutputs) report(n);
     }
   });
+}
+
+/** JMP/LBL inside each program, CALL targets and recursive calls. */
+function checkProgramFlow(project: Project, out: Diagnostic[]): void {
+  const byName = new Map(project.programs.map((p) => [p.name, p]));
+  const calls = new Map<string, Set<string>>();
+  for (const prog of project.programs) {
+    const labels = new Map<string, number>();
+    const jumps: { label: string; rungId: string; elementId: string }[] = [];
+    const callees = new Set<string>();
+    for (const rung of prog.rungs) {
+      const at = { programId: prog.id, rungId: rung.id };
+      forEachElement(rung.body, (el) => {
+        const name = el.operands[0]?.trim() ?? '';
+        if (!name) return;
+        if (el.instr === 'LBL') {
+          labels.set(name, (labels.get(name) ?? 0) + 1);
+          if (labels.get(name) === 2)
+            out.push({
+              severity: 'error',
+              code: 'duplicateLabel',
+              params: { label: name },
+              ...at,
+              elementId: el.id,
+            });
+          if (rung.body[0]?.id !== el.id)
+            out.push({
+              severity: 'warning',
+              code: 'labelNotFirst',
+              params: { label: name },
+              ...at,
+              elementId: el.id,
+            });
+        }
+        if (el.instr === 'JMP') jumps.push({ label: name, ...at, elementId: el.id });
+        if (el.instr === 'CALL') {
+          const target = byName.get(name);
+          if (!target)
+            out.push({
+              severity: 'error',
+              code: 'unknownProgram',
+              params: { name },
+              ...at,
+              elementId: el.id,
+            });
+          else if (target.id === prog.id)
+            out.push({ severity: 'error', code: 'recursiveCall', params: { name }, ...at, elementId: el.id });
+          else callees.add(target.name);
+        }
+      });
+    }
+    for (const j of jumps)
+      if (!labels.has(j.label))
+        out.push({
+          severity: 'error',
+          code: 'unknownLabel',
+          params: { label: j.label },
+          programId: prog.id,
+          rungId: j.rungId,
+          elementId: j.elementId,
+        });
+    calls.set(prog.name, callees);
+  }
+  // Indirect recursion (A calls B calls A).
+  const visiting = new Set<string>();
+  const done = new Set<string>();
+  const reported = new Set<string>();
+  const dfs = (name: string, path: string[]) => {
+    if (visiting.has(name)) {
+      const cycle = [...path.slice(path.indexOf(name)), name].join(' → ');
+      if (!reported.has(cycle)) {
+        reported.add(cycle);
+        out.push({ severity: 'error', code: 'callCycle', params: { cycle } });
+      }
+      return;
+    }
+    if (done.has(name)) return;
+    visiting.add(name);
+    for (const c of calls.get(name) ?? []) dfs(c, [...path, name]);
+    visiting.delete(name);
+    done.add(name);
+  };
+  for (const name of calls.keys()) dfs(name, []);
+  for (const prog of project.programs)
+    if (prog.kind === 'sub' && ![...calls.values()].some((c) => c.has(prog.name)))
+      out.push({
+        severity: 'warning',
+        code: 'subNeverCalled',
+        params: { name: prog.name },
+        programId: prog.id,
+      });
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useCurrentProgram, useProject } from '../../store/project.ts';
 import { useSim } from '../../store/sim.ts';
 import { Palette } from './Palette.tsx';
+import { ProgramTabs } from './ProgramTabs.tsx';
 import { RungView } from './RungView.tsx';
 import { CW, PAD } from './format.ts';
 import { explainMarks, useExplanation } from '../xref/ExplainPanel.tsx';
@@ -37,6 +38,7 @@ export function LadderEditor() {
   const hasNode = !!selection?.nodeId;
   return (
     <div className="editor">
+      <ProgramTabs />
       {!readOnly && <Palette />}
       {!readOnly && (
         <div className="editor-toolbar">

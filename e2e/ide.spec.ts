@@ -283,3 +283,41 @@ test('trend shows timer accumulators as time', async ({ page }) => {
   await page.waitForTimeout(800);
   await expect(page.locator('.trend-range').first()).toHaveText(/^\d+(ms|[.,]\d+s)$/);
 });
+
+test('subroutines and jumps: program tabs, CALL and JMP/LBL', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-subroutines').click();
+  await expect(page.getByTestId('program-tab-Principal')).toBeVisible();
+  await expect(page.getByTestId('program-tab-Alarmes')).toBeVisible();
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(0\)/);
+
+  await page.getByTestId('run').click();
+  await page.getByTestId('dock-panel').click();
+  await page.getByTestId('sw-S_SENSOR').click();
+  await expect(page.getByTestId('lamp-H_AUTO')).toHaveClass(/on/);
+  // Maintenance jumps over the automatic logic: H_AUTO freezes even when the sensor drops.
+  await page.getByTestId('sw-S_MANUT').click();
+  await page.getByTestId('sw-S_SENSOR').click();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('lamp-H_AUTO')).toHaveClass(/on/);
+  // The alarm subroutine only runs when called: the lamp blinks.
+  await page.getByTestId('sw-S_ALARME').click();
+  await expect(page.getByTestId('lamp-H_ALARME')).toHaveClass(/on/, { timeout: 3000 });
+  await expect(page.getByTestId('lamp-H_ALARME')).not.toHaveClass(/on/, { timeout: 3000 });
+
+  // A new subroutine that nobody calls is flagged.
+  await page.getByTestId('stop').click();
+  await page.getByTestId('add-sub').click();
+  await page.getByTestId('problems-tab').click();
+  await expect(page.locator('.bottom')).toContainText('nunca é chamada');
+});
+
+test('PID level control passes the automatic checks', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-scenario:tankPid').click();
+  await page.getByTestId('dock-plant').click();
+  await page.getByTestId('run-checks').click();
+  await expect(page.getByTestId('checks-score')).toHaveText(/4 de 4/, { timeout: 10_000 });
+});

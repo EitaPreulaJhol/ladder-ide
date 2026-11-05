@@ -57,6 +57,13 @@ const BASE_MNEMONICS: Record<InstructionId, string> = {
   MUL: 'MUL',
   DIV: 'DIV',
   MOD: 'MOD',
+  SR: 'SR',
+  RS: 'RS',
+  JMP: 'JMP',
+  LBL: 'LBL',
+  CALL: 'CALL',
+  SCALE: 'SCALE',
+  PID: 'PID',
 };
 
 const IEC_MEMBERS: Record<'TIMER' | 'COUNTER', Record<Member, string>> = {
@@ -129,6 +136,9 @@ const SIEMENS_MNEMONICS: Partial<Record<InstructionId, string>> = {
   GE: 'CMP >=',
   LT: 'CMP <',
   LE: 'CMP <=',
+  JMP: '-(JMP)-',
+  LBL: 'LABEL',
+  PID: 'PID_Compact',
 };
 
 const siemens: Dialect = {
@@ -189,6 +199,8 @@ const AB_MNEMONICS: Partial<Record<InstructionId, string>> = {
   LT: 'LES',
   LE: 'LEQ',
   MOVE: 'MOV',
+  CALL: 'JSR',
+  SCALE: 'SCP',
 };
 
 const AB_MEMBERS: Record<Member, string> = {

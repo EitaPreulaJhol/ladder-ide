@@ -77,7 +77,17 @@ export type InstructionId =
   | 'SUB'
   | 'MUL'
   | 'DIV'
-  | 'MOD';
+  | 'MOD'
+  // bistables
+  | 'SR'
+  | 'RS'
+  // program control
+  | 'JMP'
+  | 'LBL'
+  | 'CALL'
+  // analog
+  | 'SCALE'
+  | 'PID';
 
 export interface Element {
   kind: 'el';
@@ -106,6 +116,8 @@ export interface Program {
   id: string;
   name: string;
   rungs: Rung[];
+  /** 'main' (default) runs every scan in program order; 'sub' runs only when called (CALL/JSR). */
+  kind?: 'main' | 'sub';
 }
 
 // ---------------------------------------------------------------- hardware

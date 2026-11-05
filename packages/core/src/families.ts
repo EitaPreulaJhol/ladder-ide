@@ -301,7 +301,7 @@ const micrologix: PlcFamily = {
     },
   ],
   // RSLogix 500 has no pulse timer, up/down counter in one instruction or negated coil.
-  unsupported: ['TP', 'CTUD', 'NCOIL'],
+  unsupported: ['TP', 'CTUD', 'NCOIL', 'SR', 'RS'],
   channelAddress(m, ch, position) {
     const p = isInput(m.kind) ? 'I' : 'O';
     if (m.embedded) return isAnalog(m.kind) ? `${p}:0.${4 + ch}` : `${p}:0/${ch}`;

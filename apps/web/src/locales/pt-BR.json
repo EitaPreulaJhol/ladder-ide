@@ -72,11 +72,13 @@
   },
   "cat": {
     "contact": "Contatos",
-    "coil": "Bobinas",
+    "coil": "Bobinas e biestáveis",
     "timer": "Temporizadores",
     "counter": "Contadores",
     "compare": "Comparação",
-    "math": "Movimentação e matemática"
+    "math": "Movimentação e matemática",
+    "analog": "Analógico e PID",
+    "program": "Controle de programa"
   },
   "instr": {
     "NO": "Contato normalmente aberto: conduz quando o bit é 1",
@@ -106,7 +108,14 @@
     "SUB": "Destino = A − B",
     "MUL": "Destino = A × B",
     "DIV": "Destino = A ÷ B (inteiro trunca)",
-    "MOD": "Destino = resto de A ÷ B"
+    "MOD": "Destino = resto de A ÷ B",
+    "SR": "Biestável SR (set dominante): a linha liga Q; o bit R desliga, mas S vence se os dois estiverem ativos",
+    "RS": "Biestável RS (reset dominante): a linha liga Q; o bit R1 desliga e vence se os dois estiverem ativos",
+    "JMP": "Salto: com a linha energizada, pula para o rung com o rótulo (LBL) indicado; os rungs pulados não executam",
+    "LBL": "Rótulo: destino de um salto (JMP). Deve ser o primeiro elemento do rung",
+    "CALL": "Chama uma sub-rotina (outro programa) com a linha energizada; ela executa inteira e volta",
+    "SCALE": "Escala linear: converte IN da faixa [mín, máx] de entrada para a faixa de saída (ex.: 0–27648 → 0–100%)",
+    "PID": "Controlador PID simplificado (saída 0–100%). Sem energia na linha fica em manual: não escreve a saída. Ti e Td em segundos (Ti = 0 desliga a integral)"
   },
   "operand": {
     "bit": "Bit",
@@ -118,7 +127,22 @@
     "a": "A",
     "b": "B",
     "source": "Origem",
-    "dest": "Destino"
+    "dest": "Destino",
+    "q": "Saída Q",
+    "resetInput": "Bit de reset",
+    "label": "Rótulo",
+    "program": "Programa",
+    "input": "Entrada (IN)",
+    "inMin": "Entrada mín.",
+    "inMax": "Entrada máx.",
+    "outMin": "Saída mín.",
+    "outMax": "Saída máx.",
+    "pv": "Variável de processo (PV)",
+    "sp": "Setpoint (SP)",
+    "cv": "Saída (CV, %)",
+    "kp": "Ganho Kp",
+    "ti": "Tempo integral Ti (s)",
+    "td": "Tempo derivativo Td (s)"
   },
   "props": {
     "title": "Propriedades",
@@ -129,7 +153,8 @@
     "hintOperand": "Nome de tag, endereço (ex.: {{example}}), membro (T1.DN) ou literal (10, T#5s)",
     "newTagCreated": "Tags desconhecidas são criadas automaticamente com o tipo esperado.",
     "live": "Valor ao vivo",
-    "tagInfo": "{{type}} · {{address}}"
+    "tagInfo": "{{type}} · {{address}}",
+    "chooseProgram": "Escolha o programa…"
   },
   "bottom": {
     "watch": "Monitoração",
@@ -170,7 +195,14 @@
     "duplicateChannel": "“{{name}}” e “{{other}}” usam o mesmo canal",
     "duplicateAddress": "“{{name}}” e “{{other}}” usam o mesmo endereço {{address}}",
     "unsupportedInstruction": "“{{instr}}” não existe no {{family}}",
-    "tooManyModules": "A {{cpu}} aceita no máximo {{max}} módulo(s) de expansão"
+    "tooManyModules": "A {{cpu}} aceita no máximo {{max}} módulo(s) de expansão",
+    "duplicateLabel": "Rótulo “{{label}}” repetido no mesmo programa",
+    "labelNotFirst": "O rótulo “{{label}}” deveria ser o primeiro elemento do rung",
+    "unknownLabel": "Salto para o rótulo “{{label}}”, que não existe neste programa",
+    "unknownProgram": "Chamada para o programa “{{name}}”, que não existe",
+    "recursiveCall": "O programa “{{name}}” chama a si mesmo",
+    "callCycle": "Chamadas em ciclo: {{cycle}}",
+    "subNeverCalled": "A sub-rotina “{{name}}” nunca é chamada (CALL)"
   },
   "tags": {
     "title": "Tabela de tags",
@@ -325,6 +357,14 @@
       "overflows": "Transbordamentos: {{n}}",
       "dryRun": "Tanque vazio!",
       "resetFault": "Zerar contagem"
+    },
+    "tankPid": {
+      "title": "Controle de nível com PID",
+      "summary": "Escala analógica, válvula proporcional e controlador PID.",
+      "task": "Converta LT_LEVEL (0–27648) para % em LEVEL_PCT, use um PID para manter o nível no setpoint SP_PCT abrindo a válvula proporcional CV_VALVE (0–27648) e respeite a chave PID_ON (manual/automático). Teste mudanças de setpoint e de consumo.",
+      "valve": "válvula {{p}}%",
+      "setpoint": "Setpoint",
+      "auto": "Automático (PID_ON)"
     }
   },
   "projects": {
@@ -349,7 +389,8 @@
     "ex": {
       "sealIn": "Selo liga/desliga — o primeiro circuito de todo eletricista",
       "blinker": "Pisca-pisca com dois temporizadores",
-      "counter": "Contador de peças com lote e reset"
+      "counter": "Contador de peças com lote e reset",
+      "subroutines": "Sub-rotinas (CALL) e saltos (JMP/LBL)"
     }
   },
   "widgets": {
@@ -416,6 +457,12 @@
       "noOverflow": "Bomba para no nível alto (não transborda)",
       "scaling": "LEVEL_PCT converte LT_LEVEL para %",
       "alarm": "H_ALARM acende acima de 95% e apaga abaixo"
+    },
+    "tankPid": {
+      "reachSetpoint": "Atinge o setpoint de 50% e estabiliza",
+      "followSetpoint": "Acompanha a mudança de setpoint para 70% sem sobressinal exagerado",
+      "disturbance": "Volta ao setpoint depois de dobrar o consumo",
+      "scaling": "Escalas de entrada (nível %) e de saída (válvula) corretas"
     }
   },
   "check": {
@@ -433,7 +480,11 @@
     "wrongSorting": "{{n}} caixa(s) separada(s) errado",
     "boxesLost": "{{n}} caixa(s) não chegaram a destino",
     "overflow": "O tanque transbordou",
-    "outOfBand": "O nível saiu da faixa entre 10% e 90%"
+    "outOfBand": "O nível saiu da faixa entre 10% e 90%",
+    "setpointNotReached": "O nível não chegou a {{sp}}% (±3%) no tempo esperado",
+    "notStable": "O nível saiu da faixa de {{sp}}% ±4% depois de estabilizar",
+    "overshoot": "Sobressinal acima de 82% ao subir para {{sp}}%",
+    "disturbanceNotRejected": "Depois da perturbação o nível ficou em {{level}}% (esperado 50% ±3%)"
   },
   "xref": {
     "summary": "Referências: {{reads}} leitura(s) · {{writes}} escrita(s)",
@@ -515,5 +566,23 @@
         }
       }
     }
+  },
+  "programs": {
+    "title": "Programas",
+    "mainHint": "Programa principal: executa a cada scan, na ordem das abas. Clique duas vezes para renomear.",
+    "subHint": "Sub-rotina: executa só quando chamada por CALL ({{n}} chamada(s)). Clique duas vezes para renomear.",
+    "newSub": "Sub-rotina",
+    "newMain": "Programa",
+    "newSubName": "Sub-rotina",
+    "newMainName": "Programa",
+    "rename": "Renomear",
+    "makeMain": "Transformar em programa principal",
+    "makeSub": "Transformar em sub-rotina",
+    "moveLeft": "Mover para a esquerda (executa antes)",
+    "moveRight": "Mover para a direita (executa depois)",
+    "delete": "Excluir programa",
+    "deleteConfirm": "Excluir o programa “{{name}}”?",
+    "deleteCalled": "O programa “{{name}}” é chamado {{n}} vez(es). Excluir mesmo assim? As chamadas ficarão inválidas.",
+    "nameTaken": "Já existe um programa com esse nome."
   }
 }

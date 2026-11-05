@@ -86,6 +86,14 @@ describe('broken solutions fail the right check', () => {
     expect(failures(p, 'tank')).toContain('noOverflow:overflow');
   });
 
+  it('PID without integral action leaves a steady-state offset', () => {
+    const p = scenarioProject('tankPid');
+    const pid = p.programs[0]!.rungs[1]!.body[1] as { operands: string[] };
+    pid.operands[4] = '0'; // Ti = 0: proportional only
+    const f = failures(p, 'tankPid');
+    expect(f.some((x) => x.startsWith('reachSetpoint:') || x.startsWith('disturbance:'))).toBe(true);
+  });
+
   it('empty program reports failures instead of throwing', () => {
     for (const sc of SCENARIOS) {
       const results = runScenarioChecks(scenarioProject(sc.id, false), sc.id);

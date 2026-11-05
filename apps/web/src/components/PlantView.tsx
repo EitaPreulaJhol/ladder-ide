@@ -8,6 +8,7 @@ import { StarDeltaPlant } from './plants/StarDeltaPlant.tsx';
 import { TrafficPlant } from './plants/TrafficPlant.tsx';
 import { ConveyorPlant } from './plants/ConveyorPlant.tsx';
 import { TankPlant } from './plants/TankPlant.tsx';
+import { TankPidPlant } from './plants/TankPidPlant.tsx';
 import type { PlantProps } from './plants/common.tsx';
 import { CheckPanel } from './CheckPanel.tsx';
 
@@ -19,6 +20,7 @@ const RENDERERS: Record<string, (p: PlantProps<any>) => React.ReactNode> = {
   traffic: TrafficPlant,
   conveyor: ConveyorPlant,
   tank: TankPlant,
+  tankPid: TankPidPlant,
 };
 
 export function PlantView() {

@@ -7,10 +7,26 @@
  * every scan advances the clock by `dtMs`, which makes timers deterministic and
  * lets the UI run faster or slower than real time.
  */
-import type { CounterValue, Element, LadderNode, Project, Series, Tag, TimerValue, Value } from '../model.ts';
+import type {
+  CounterValue,
+  Element,
+  LadderNode,
+  Program,
+  Project,
+  Series,
+  Tag,
+  TimerValue,
+  Value,
+} from '../model.ts';
 import { parseOperand, type Member, type ParsedOperand } from '../operand.ts';
 import { INSTRUCTIONS } from '../instructions.ts';
 import { isInputTag } from '../hardware.ts';
+import { forEachElement } from '../edit.ts';
+
+/** Max rungs evaluated in one scan before the watchdog trips (catches endless JMP loops). */
+const WATCHDOG_RUNGS = 100_000;
+const WATCHDOG = Symbol('watchdog');
+const MAX_CALL_DEPTH = 8;
 
 /** Power flow per node id: [powerIn, powerOut]. */
 export type Trace = Record<string, [boolean, boolean]>;
@@ -76,8 +92,10 @@ export function writtenTags(project: Project): Set<string> {
         info.operands.forEach((spec, i) => {
           const p = parseOperand(n.operands[i]);
           if (p.kind !== 'tag') return;
+          if (spec.kind === 'label' || spec.kind === 'program') return;
           if (
-            info.category === 'coil' ||
+            (info.category === 'coil' && spec.kind === 'bit' && i === 0) ||
+            spec.kind === 'bitDest' ||
             spec.kind === 'numberDest' ||
             spec.kind === 'timer' ||
             spec.kind === 'counter' ||
@@ -107,6 +125,13 @@ export class Simulator {
   private trace: Trace = {};
   private faults = new Set<string>();
   private writers: Record<string, string> = {};
+  /** Label -> rung index, per program id (JMP/LBL). */
+  private labels = new Map<string, Map<string, number>>();
+  private programsByName = new Map<string, Program>();
+  private jumpTo: string | null = null;
+  private callDepth = 0;
+  private rungBudget = 0;
+  private pidState = new Map<string, { integral: number; prevPv: number | null }>();
   private currentEl = '';
   private dt = 0;
   timeMs = 0;
@@ -137,6 +162,19 @@ export class Simulator {
     };
     for (const prog of project.programs) for (const r of prog.rungs) visit(r.body);
 
+    this.programsByName = new Map(project.programs.map((p) => [p.name, p]));
+    this.labels.clear();
+    for (const prog of project.programs) {
+      const map = new Map<string, number>();
+      prog.rungs.forEach((r, i) =>
+        forEachElement(r.body, (el) => {
+          const name = el.operands[0]?.trim();
+          if (el.instr === 'LBL' && name && !map.has(name)) map.set(name, i);
+        }),
+      );
+      this.labels.set(prog.id, map);
+    }
+
     const written = writtenTags(project);
     this.inputTags = new Set(
       project.tags
@@ -156,6 +194,7 @@ export class Simulator {
     this.values.clear();
     for (const t of this.project.tags) this.values.set(t.name, initialValue(t));
     this.edgeMem.clear();
+    this.pidState.clear();
     this.trace = {};
     this.faults.clear();
     this.timeMs = 0;
@@ -235,7 +274,15 @@ export class Simulator {
 
     this.applyInputs();
 
-    for (const prog of this.project.programs) for (const rung of prog.rungs) this.evalSeries(rung.body, true);
+    this.rungBudget = WATCHDOG_RUNGS;
+    this.callDepth = 0;
+    try {
+      for (const prog of this.project.programs) if ((prog.kind ?? 'main') === 'main') this.runProgram(prog);
+    } catch (e) {
+      if (e !== WATCHDOG) throw e;
+      // Endless jump loop: a real PLC trips its watchdog and stops the scan.
+      this.faults.add('scan:watchdog');
+    }
   }
 
   snapshot(): SimSnapshot {
@@ -253,6 +300,28 @@ export class Simulator {
   }
 
   // ------------------------------------------------------------ evaluation
+
+  /** Runs the rungs of a program, following JMP/LBL jumps. */
+  private runProgram(prog: Program): void {
+    const outerJump = this.jumpTo;
+    const labels = this.labels.get(prog.id);
+    let i = 0;
+    while (i < prog.rungs.length) {
+      if (--this.rungBudget < 0) throw WATCHDOG;
+      this.jumpTo = null;
+      this.evalSeries(prog.rungs[i]!.body, true);
+      if (this.jumpTo !== null) {
+        const target = labels?.get(this.jumpTo);
+        if (target !== undefined) {
+          i = target;
+          continue;
+        }
+        this.faults.add(`${prog.id}:missingLabel:${this.jumpTo}`);
+      }
+      i++;
+    }
+    this.jumpTo = outerJump;
+  }
 
   private evalSeries(series: Series, power: boolean): boolean {
     for (const node of series) power = this.evalNode(node, power);
@@ -377,7 +446,89 @@ export class Simulator {
         this.writeNum(ops[2], r);
         return true;
       }
+      case 'SR':
+      case 'RS': {
+        // SR: set dominant (Q = S or (not R and Q)); RS: reset dominant (Q = not R and (S or Q)).
+        const q = this.readBool(a);
+        const r = this.readBool(ops[1] ?? { kind: 'empty' });
+        const next = el.instr === 'SR' ? pin || (!r && q) : !r && (pin || q);
+        this.writeBool(a, next);
+        return next;
+      }
+      case 'LBL':
+        return pin;
+      case 'JMP':
+        if (pin) this.jumpTo = el.operands[0]?.trim() ?? '';
+        return pin;
+      case 'CALL': {
+        if (!pin) return false;
+        const sub = this.programsByName.get(el.operands[0]?.trim() ?? '');
+        if (!sub) {
+          this.faults.add(`${el.id}:missingProgram`);
+          return false;
+        }
+        if (this.callDepth >= MAX_CALL_DEPTH) {
+          this.faults.add(`${el.id}:callDepth`);
+          return false;
+        }
+        this.callDepth++;
+        try {
+          this.runProgram(sub);
+        } finally {
+          this.callDepth--;
+          this.currentEl = el.id;
+        }
+        return true;
+      }
+      case 'SCALE': {
+        if (!pin) return false;
+        const [x, inMin, inMax, outMin, outMax] = [0, 1, 2, 3, 4].map((i) => this.readNum(ops[i]));
+        if (inMax === inMin) {
+          this.faults.add(`${el.id}:scaleRange`);
+          return false;
+        }
+        const r = ((x! - inMin!) * (outMax! - outMin!)) / (inMax! - inMin!) + outMin!;
+        this.writeNum(ops[5], this.isIntegerDest(ops[5]) ? Math.round(r) : r);
+        return true;
+      }
+      case 'PID':
+        return this.execPid(el, ops, pin);
     }
+  }
+
+  /**
+   * Simplified PID (ISA form, derivative on measurement, output 0..100 %, conditional
+   * integration as anti-windup). Ti and Td in seconds; Ti = 0 disables the integral.
+   * Without power the controller is in manual: the output is not written and the integral resets.
+   */
+  private execPid(el: Element, ops: ParsedOperand[], pin: boolean): boolean {
+    const st = this.pidState.get(el.id) ?? { integral: 0, prevPv: null };
+    this.pidState.set(el.id, st);
+    if (!pin) {
+      st.integral = 0;
+      st.prevPv = null;
+      return false;
+    }
+    const pv = this.readNum(ops[0]);
+    const sp = this.readNum(ops[1]);
+    const kp = this.readNum(ops[3]);
+    const ti = this.readNum(ops[4]);
+    const td = this.readNum(ops[5]);
+    const dt = this.dt / 1000;
+    const e = sp - pv;
+    const dPv = st.prevPv === null || dt <= 0 ? 0 : (pv - st.prevPv) / dt;
+    st.prevPv = pv;
+    const p = kp * e;
+    const d = -kp * td * dPv;
+    const di = ti > 0 ? (kp * e * dt) / ti : 0;
+    let cv = p + st.integral + di + d;
+    const saturatedHigh = cv > 100;
+    const saturatedLow = cv < 0;
+    // Only integrate when it does not push further into saturation.
+    if (!(saturatedHigh && di > 0) && !(saturatedLow && di < 0)) st.integral += di;
+    cv = Math.max(0, Math.min(100, p + st.integral + d));
+    this.writeNum(ops[2], cv);
+    return true;
   }
 
   private execTimer(

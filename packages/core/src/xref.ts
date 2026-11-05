@@ -30,7 +30,7 @@ function accessOf(instr: InstructionId, operandIndex: number): Access {
   if (!spec) return 'read';
   if (info.category === 'coil' && operandIndex === 0) return 'write';
   if (spec.kind === 'timer' || spec.kind === 'counter') return 'readWrite';
-  if (spec.kind === 'timerOrCounter' || spec.kind === 'numberDest') return 'write';
+  if (spec.kind === 'timerOrCounter' || spec.kind === 'numberDest' || spec.kind === 'bitDest') return 'write';
   return 'read';
 }
 
@@ -44,8 +44,10 @@ export function crossReference(project: Project): Map<string, XRef[]> {
     prog.rungs.forEach((rung, rungIndex) =>
       forEachElement(rung.body, (el) =>
         el.operands.forEach((operand, operandIndex) => {
+          const spec = INSTRUCTIONS[el.instr].operands[operandIndex];
+          if (!spec || spec.kind === 'label' || spec.kind === 'program') return; // names, not tags
           const p = parseOperand(operand);
-          if (p.kind !== 'tag' || operandIndex >= INSTRUCTIONS[el.instr].operands.length) return;
+          if (p.kind !== 'tag') return;
           const ref: XRef = {
             tag: p.name,
             operand: operand.trim(),

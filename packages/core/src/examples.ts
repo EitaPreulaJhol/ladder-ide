@@ -1,7 +1,7 @@
 /** Ready-made example projects for learning. */
 import type { Project } from './model.ts';
 import { createProject } from './project.ts';
-import { coil, el, nc, no, par, program, rung, tag } from './build.ts';
+import { coil, el, nc, no, par, program, reset, rung, tag } from './build.ts';
 import { applyScenario, SCENARIOS } from './scenarios/index.ts';
 import { findFreeChannel } from './hardware.ts';
 import { newId } from './ids.ts';
@@ -109,6 +109,56 @@ export const EXAMPLES: ExampleDef[] = [
         widget('pushbutton', 'B_ZERA', 'Zerar', '#dc2626'),
         widget('display', 'PECAS', 'Contagem'),
         widget('lamp', 'H_LOTE', 'Lote OK', '#16a34a'),
+      ];
+      return p;
+    },
+  },
+  {
+    id: 'subroutines',
+    build() {
+      const p = createProject('Exemplo: sub-rotinas e saltos');
+      p.tags = [
+        tag('S_MANUT', 'BOOL', { comment: 'Chave de manutenção (pula a lógica automática)' }),
+        tag('S_SENSOR', 'BOOL', { comment: 'Sensor da máquina' }),
+        tag('S_ALARME', 'BOOL', { comment: 'Alarme ativo' }),
+        tag('H_AUTO', 'BOOL', { comment: 'Lâmpada da lógica automática' }),
+        tag('H_ALARME', 'BOOL', { comment: 'Sirene/lâmpada de alarme (pisca)' }),
+        tag('T_PISCA', 'TIMER', { comment: 'Base de tempo do pisca' }),
+      ];
+      p.programs = [
+        program('Principal', [
+          rung([no('S_MANUT'), el('JMP', 'ALARMES')], 'Em manutenção: pula a lógica automática (JMP → LBL)'),
+          rung(
+            [no('S_SENSOR'), coil('H_AUTO')],
+            'Lógica automática (não executa durante a manutenção: H_AUTO congela)',
+          ),
+          rung(
+            [el('LBL', 'ALARMES'), no('S_ALARME'), el('CALL', 'Alarmes')],
+            'Chama a sub-rotina só quando há alarme',
+          ),
+          rung(
+            [nc('S_ALARME'), reset('H_ALARME')],
+            'Sub-rotina não chamada não atualiza suas saídas: desliga H_ALARME aqui',
+          ),
+        ]),
+        {
+          ...program('Alarmes', [
+            rung([nc('T_PISCA.DN'), el('TON', 'T_PISCA', 'T#1s')], 'Base de tempo de 1 s que se reinicia'),
+            rung(
+              [el('LT', 'T_PISCA.ACC', '500'), coil('H_ALARME')],
+              'Pisca: aceso na primeira metade do ciclo',
+            ),
+          ]),
+          kind: 'sub',
+        },
+      ];
+      bindIo(p);
+      p.ioPanel = [
+        widget('toggle', 'S_MANUT', 'Manutenção'),
+        widget('sensor', 'S_SENSOR', 'Sensor'),
+        widget('toggle', 'S_ALARME', 'Alarme'),
+        widget('lamp', 'H_AUTO', 'Automático', '#16a34a'),
+        widget('lamp', 'H_ALARME', 'Alarme', '#dc2626'),
       ];
       return p;
     },

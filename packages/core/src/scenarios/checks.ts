@@ -17,6 +17,7 @@ import type { PlantIo, ScenarioDef } from './types.ts';
 import type { ConveyorState } from './conveyor.ts';
 import type { MotorState } from './motor.ts';
 import type { TankState } from './tank.ts';
+import type { TankPidState } from './tankPid.ts';
 
 export interface Failure {
   code: string;
@@ -53,6 +54,13 @@ export interface CheckContext<S> {
   wait(ms: number): void;
   /** Waits until `signal` equals `value`, failing after `maxMs`. */
   waitFor(signal: string, value: boolean | number, maxMs: number): void;
+  /** Waits until `predicate` holds, failing with `code` after `maxMs`. */
+  waitUntil(
+    predicate: () => boolean,
+    maxMs: number,
+    code: string,
+    params?: Record<string, string | number>,
+  ): void;
   /** Runs `fn` after every scan for `ms` (custom observers). */
   observe(ms: number, fn: () => void): void;
   expectValue(signal: string, expected: boolean | number, tolerance?: number): void;
@@ -149,6 +157,10 @@ export function runCheck<S>(
       };
       if (matches()) return;
       if (!scanFor(maxMs, matches)) fail('timeout', { signal, expected: show(value), seconds: maxMs / 1000 });
+    },
+    waitUntil(predicate, maxMs, code, params) {
+      if (predicate()) return;
+      if (!scanFor(maxMs, predicate)) fail(code, params);
     },
     observe: (ms, fn) => void scanFor(ms, () => void fn()),
     expectValue(signal, expected, tolerance = 0) {
@@ -430,10 +442,58 @@ const tankChecks: ScenarioCheck<TankState>[] = [
   },
 ];
 
+const near = (c: CheckContext<TankPidState>, pct: number, tol: number) =>
+  Math.abs(c.state.level * 100 - pct) <= tol;
+
+const tankPidChecks: ScenarioCheck<TankPidState>[] = [
+  {
+    id: 'reachSetpoint',
+    run(c) {
+      c.always(() => !c.state.overflowing, 'overflow');
+      c.waitUntil(() => near(c, 50, 3), 120_000, 'setpointNotReached', { sp: 50 });
+      c.always(() => near(c, 50, 4), 'notStable', { sp: 50 });
+      c.wait(30_000);
+    },
+  },
+  {
+    id: 'followSetpoint',
+    run(c) {
+      c.wait(90_000);
+      c.set('SP_PCT', 70);
+      c.waitUntil(() => near(c, 70, 3), 120_000, 'setpointNotReached', { sp: 70 });
+      c.always(() => c.state.level < 0.82, 'overshoot', { sp: 70 });
+      c.wait(30_000);
+    },
+  },
+  {
+    id: 'disturbance',
+    run(c) {
+      c.wait(90_000);
+      c.action('demand', 0.8);
+      c.wait(150_000);
+      c.expect(near(c, 50, 3), 'disturbanceNotRejected', { level: Math.round(c.state.level * 100) });
+    },
+  },
+  {
+    id: 'scaling',
+    run(c) {
+      c.force('LT_LEVEL', 13824);
+      c.wait(200);
+      c.expectValue('LEVEL_PCT', 50, 0.5);
+      c.force('LT_LEVEL', undefined);
+      c.force('PID_ON', false); // manual: CV_PCT keeps its value, the scaling must follow it
+      c.force('CV_PCT', 25);
+      c.wait(200);
+      c.expectValue('CV_VALVE', 6912, 1);
+    },
+  },
+];
+
 export const SCENARIO_CHECKS: Record<string, ScenarioCheck[]> = {
   motor: motorChecks,
   starDelta: starDeltaChecks,
   traffic: trafficChecks,
   conveyor: conveyorChecks,
   tank: tankChecks,
+  tankPid: tankPidChecks,
 };

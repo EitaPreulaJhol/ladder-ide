@@ -21,6 +21,8 @@ import {
   wrapInBranch,
   ioList,
   channelType,
+  forEachElement,
+  newId,
   type InstructionId,
   type LadderNode,
   type Program,
@@ -68,6 +70,11 @@ interface State {
   select(sel: Selection | null): void;
   setCursor(c: Cursor | null): void;
   setProgram(id: string): void;
+  addProgram(kind: 'main' | 'sub', name: string): void;
+  renameProgram(id: string, name: string): boolean;
+  deleteProgram(id: string): void;
+  moveProgram(id: string, delta: number): void;
+  setProgramKind(id: string, kind: 'main' | 'sub'): void;
 
   insertInstruction(instr: InstructionId, at?: Cursor): void;
   moveNodeTo(fromRungId: string, nodeId: string, to: Cursor): void;
@@ -215,6 +222,73 @@ export const useProject = create<State>((set, get) => {
     setCursor: (cursor) => set({ cursor }),
     setProgram: (programId) => set({ programId, selection: null, cursor: null }),
 
+    addProgram(kind, name) {
+      const existing = new Set(get().project.programs.map((p) => p.name));
+      let unique = name;
+      for (let i = 2; existing.has(unique); i++) unique = `${name} ${i}`;
+      const prog: Program = { id: newId('g_'), name: unique, kind, rungs: [newRung()] };
+      commit((d) => {
+        d.programs.push(prog);
+      });
+      set({
+        programId: prog.id,
+        selection: null,
+        cursor: { rungId: prog.rungs[0]!.id, container: prog.rungs[0]!.id, branch: 0, index: 0 },
+      });
+    },
+
+    renameProgram(id, name) {
+      const clean = name.trim();
+      const { project } = get();
+      const prog = project.programs.find((p) => p.id === id);
+      if (!prog || !clean || clean === prog.name) return clean === prog?.name;
+      if (project.programs.some((p) => p.id !== id && p.name === clean)) return false;
+      const old = prog.name;
+      commit((d) => {
+        const p = d.programs.find((x) => x.id === id)!;
+        p.name = clean;
+        // Keep CALL instructions pointing to the renamed program.
+        for (const g of d.programs)
+          for (const r of g.rungs)
+            forEachElement(r.body, (el) => {
+              if (el.instr === 'CALL' && el.operands[0]?.trim() === old) el.operands[0] = clean;
+            });
+      });
+      return true;
+    },
+
+    deleteProgram(id) {
+      const { project, programId } = get();
+      if (project.programs.length <= 1) return;
+      const idx = project.programs.findIndex((p) => p.id === id);
+      commit((d) => {
+        d.programs = d.programs.filter((p) => p.id !== id);
+      });
+      if (programId === id) {
+        const next = get().project.programs[Math.max(0, idx - 1)]!;
+        set({ programId: next.id, selection: null, cursor: null });
+      }
+    },
+
+    moveProgram(id, delta) {
+      commit((d) => {
+        const i = d.programs.findIndex((p) => p.id === id);
+        const j = i + delta;
+        if (i < 0 || j < 0 || j >= d.programs.length) return;
+        const [p] = d.programs.splice(i, 1);
+        d.programs.splice(j, 0, p!);
+      });
+    },
+
+    setProgramKind(id, kind) {
+      commit((d) => {
+        const p = d.programs.find((x) => x.id === id);
+        if (!p) return;
+        if (kind === 'main') delete p.kind;
+        else p.kind = 'sub';
+      });
+    },
+
     insertInstruction(instr, at) {
       const { selection, programId, project } = get();
       let cursor = at ?? get().cursor;
@@ -324,7 +398,9 @@ export const useProject = create<State>((set, get) => {
         if (el?.kind !== 'el') return;
         const spec = INSTRUCTIONS[el.instr].operands[index];
         if (!spec) return;
-        const value = resolveOperand(d, text, spec.kind);
+        // Labels and program names are plain names, never tags or addresses.
+        const value =
+          spec.kind === 'label' || spec.kind === 'program' ? text.trim() : resolveOperand(d, text, spec.kind);
         if (el.operands[index] === value) return;
         while (el.operands.length <= index) el.operands.push('');
         el.operands[index] = value;

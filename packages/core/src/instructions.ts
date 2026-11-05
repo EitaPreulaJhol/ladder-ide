@@ -1,6 +1,7 @@
 import type { DataType, InstructionId } from './model.ts';
 
-export type InstructionCategory = 'contact' | 'coil' | 'timer' | 'counter' | 'compare' | 'math';
+export type InstructionCategory =
+  'contact' | 'coil' | 'timer' | 'counter' | 'compare' | 'math' | 'analog' | 'program';
 
 /** What an operand slot accepts. */
 export type OperandKind =
@@ -10,7 +11,10 @@ export type OperandKind =
   | 'timerOrCounter'
   | 'time' // preset in ms: literal (5000, T#5s) or numeric tag
   | 'number' // numeric tag or literal
-  | 'numberDest'; // numeric tag that will be written
+  | 'numberDest' // numeric tag that will be written
+  | 'bitDest' // BOOL tag written by a box (SR/RS output)
+  | 'label' // jump label name (not a tag)
+  | 'program'; // program name (not a tag)
 
 export interface OperandSpec {
   kind: OperandKind;
@@ -156,6 +160,55 @@ const list: InstructionInfo[] = [
     isOutput: true,
     isBox: true,
   })),
+
+  // Bistables: rung power is S (SR) / S (RS); the second operand is the reset input.
+  {
+    id: 'SR',
+    category: 'coil',
+    operands: [op('bitDest', 'q'), op('bit', 'resetInput')],
+    isOutput: true,
+    isBox: true,
+  },
+  {
+    id: 'RS',
+    category: 'coil',
+    operands: [op('bitDest', 'q'), op('bit', 'resetInput')],
+    isOutput: true,
+    isBox: true,
+  },
+
+  { id: 'LBL', category: 'program', operands: [op('label', 'label')], isOutput: false, isBox: false },
+  { id: 'JMP', category: 'program', operands: [op('label', 'label')], isOutput: true, isBox: false },
+  { id: 'CALL', category: 'program', operands: [op('program', 'program')], isOutput: true, isBox: true },
+
+  {
+    id: 'SCALE',
+    category: 'analog',
+    operands: [
+      op('number', 'input'),
+      op('number', 'inMin'),
+      op('number', 'inMax'),
+      op('number', 'outMin'),
+      op('number', 'outMax'),
+      op('numberDest', 'dest'),
+    ],
+    isOutput: true,
+    isBox: true,
+  },
+  {
+    id: 'PID',
+    category: 'analog',
+    operands: [
+      op('number', 'pv'),
+      op('number', 'sp'),
+      op('numberDest', 'cv'),
+      op('number', 'kp'),
+      op('number', 'ti'),
+      op('number', 'td'),
+    ],
+    isOutput: true,
+    isBox: true,
+  },
 ];
 
 export const INSTRUCTIONS: Record<InstructionId, InstructionInfo> = Object.fromEntries(
@@ -171,12 +224,15 @@ export const CATEGORY_ORDER: InstructionCategory[] = [
   'counter',
   'compare',
   'math',
+  'analog',
+  'program',
 ];
 
 /** Default tag type created when an operand of this kind references an unknown tag. */
 export function defaultTypeForOperand(kind: OperandKind): DataType | null {
   switch (kind) {
     case 'bit':
+    case 'bitDest':
       return 'BOOL';
     case 'timer':
       return 'TIMER';
@@ -193,8 +249,11 @@ export function defaultTypeForOperand(kind: OperandKind): DataType | null {
 
 /** Default operands for a freshly inserted instruction. */
 export function defaultOperands(id: InstructionId): string[] {
+  if (id === 'SCALE') return ['', '0', '27648', '0', '100', ''];
+  if (id === 'PID') return ['', '', '', '1', '10', '0'];
   const info = INSTRUCTIONS[id];
   return info.operands.map((o) => {
+    if (o.kind === 'label') return 'L1';
     if (o.kind === 'time') return 'T#5s';
     if (o.label === 'preset') return '10';
     if (o.label === 'b') return '0';

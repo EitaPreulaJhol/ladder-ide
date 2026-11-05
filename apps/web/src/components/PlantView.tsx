@@ -12,6 +12,9 @@ import { TankPidPlant } from './plants/TankPidPlant.tsx';
 import { CylindersPlant } from './plants/CylindersPlant.tsx';
 import type { PlantProps } from './plants/common.tsx';
 import { CheckPanel } from './CheckPanel.tsx';
+import { PlantCanvas } from './plantBuilder/PlantCanvas.tsx';
+import { OperateHelp, PlantActions } from './plantBuilder/PlantActions.tsx';
+import { PlantStart } from './plantBuilder/PlantEditor.tsx';
 
 // Each plant has its own state type; the registry is keyed by scenario id.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,6 +31,8 @@ const RENDERERS: Record<string, (p: PlantProps<any>) => React.ReactNode> = {
 export function PlantView() {
   const { t } = useTranslation();
   const scenarioId = useProject((s) => s.project.scenarioId);
+  const design = useProject((s) => s.project.plant);
+  const setView = useProject((s) => s.setView);
   const readOnly = useProject((s) => s.sharedId !== null);
   const update = useProject((s) => s.update);
   const state = useSim((s) => s.scenarioState);
@@ -41,12 +46,31 @@ export function PlantView() {
   const { setInput, plantAction, send } = useSim.getState();
   const scenario = getScenario(scenarioId);
 
+  if (design)
+    return (
+      <div className="plant">
+        <div className="panel-head">
+          <span>{t('builder.editableTitle')}</span>
+          <span className="row">
+            <button onClick={() => send({ type: 'resetPlant' })}>{t('plant.reset')}</button>
+            <button onClick={() => setView('plant')} data-testid="plant-open-editor">
+              {readOnly ? t('builder.openView') : `✎ ${t('builder.edit')}`}
+            </button>
+          </span>
+        </div>
+        <PlantCanvas design={design} />
+        <PlantActions design={design} />
+        <OperateHelp design={design} className="plant-msg" />
+      </div>
+    );
+
   if (!scenario) {
     return (
       <div className="plant pad">
         <p className="muted">{t('plant.none')}</p>
         {!readOnly && (
           <div className="scenario-list">
+            <PlantStart compact />
             {SCENARIOS.map((sc) => (
               <div key={sc.id} className="scenario-card">
                 <strong>{t(`plant.${sc.id}.title`)}</strong>
@@ -83,6 +107,11 @@ export function PlantView() {
         <span>{t(`plant.${scenario.id}.title`)}</span>
         <span className="row">
           <button onClick={() => send({ type: 'resetPlant' })}>{t('plant.reset')}</button>
+          {!readOnly && (
+            <button onClick={() => setView('plant')} title={t('builder.convertHint')}>
+              ✎ {t('builder.convertShort')}
+            </button>
+          )}
           {!readOnly && (
             <button
               className="danger"

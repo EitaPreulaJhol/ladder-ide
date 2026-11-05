@@ -2317,6 +2317,165 @@ table.grid tr.unused td {
   gap: 8px;
 }
 
+/* ------------------------------------------------------------ plant builder */
+
+.plant-canvas {
+  display: block;
+  touch-action: none;
+}
+.plant-canvas.editing {
+  user-select: none;
+}
+.plant-text {
+  fill: var(--text);
+  font-weight: 700;
+}
+.pb-live {
+  cursor: pointer;
+}
+.belt-fwd {
+  animation: belt 0.6s linear infinite;
+}
+.belt-rev {
+  animation: belt 0.6s linear infinite reverse;
+}
+.pipe-flow {
+  animation: belt 0.5s linear infinite;
+}
+.siren-wave {
+  animation: siren 0.5s ease-in-out infinite alternate;
+}
+@keyframes siren {
+  from {
+    opacity: 0.15;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.pc-hit {
+  fill: rgba(59, 130, 246, 0.04);
+  stroke: transparent;
+  cursor: move;
+}
+.pc-hit:hover {
+  stroke: rgba(148, 163, 184, 0.5);
+  stroke-dasharray: 3 3;
+}
+.pc-hit.selected {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.pc-resize {
+  fill: var(--accent);
+  cursor: nwse-resize;
+}
+.pc-palette {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pc-palette-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pc-layout {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.pc-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pc-canvas-wrap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pc-canvas-wrap .plant-svg {
+  border-bottom: none;
+}
+.pc-side {
+  width: 280px;
+  flex: none;
+}
+.pc-props {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px 8px;
+  margin: 0;
+}
+.pc-section legend {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.pc-port {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pc-port select {
+  flex: 1;
+  min-width: 0;
+}
+.pc-port-name {
+  font-size: 12px;
+}
+.io-chip {
+  margin-left: 6px;
+  font: 10px var(--mono);
+  color: var(--muted);
+}
+.warn-text {
+  color: var(--warn-text);
+  font-weight: 700;
+}
+.plant-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 12px;
+}
+.plant-action-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.plant-action-row > .mono {
+  min-width: 64px;
+}
+.plant-start {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (max-width: 900px) {
+  .pc-layout {
+    flex-direction: column;
+  }
+  .pc-side {
+    width: 100%;
+  }
+}
+
 /* ------------------------------------------------------------ Modbus bridge */
 
 .modbus {

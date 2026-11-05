@@ -4,6 +4,7 @@ import type { LadderNode, Project } from './model.ts';
 import { SCHEMA_VERSION } from './model.ts';
 import { INSTRUCTION_IDS } from './instructions.ts';
 import { migrateProject } from './migrations.ts';
+import { COMPONENT_KINDS } from './plant/components.ts';
 
 const id = z.string().min(1).max(64);
 const text = (max: number) => z.string().max(max);
@@ -116,6 +117,28 @@ const HmiSchema = z.object({
   screens: z.array(z.object({ id, name: text(60), widgets: z.array(HmiWidgetSchema).max(200) })).max(30),
 });
 
+const PlantSchema = z.object({
+  width: z.number().min(160).max(2000),
+  height: z.number().min(120).max(1200),
+  components: z
+    .array(
+      z.object({
+        id,
+        kind: z.enum(COMPONENT_KINDS as [string, ...string[]]),
+        x: z.number().min(-200).max(2200),
+        y: z.number().min(-200).max(1400),
+        w: z.number().min(2).max(2000),
+        h: z.number().min(2).max(1200),
+        label: text(100),
+        tags: z.record(z.string().max(32), text(64)).refine((r) => Object.keys(r).length <= 16),
+        params: z
+          .record(z.string().max(32), z.union([z.number(), z.boolean(), text(100)]))
+          .refine((r) => Object.keys(r).length <= 32),
+      }),
+    )
+    .max(300),
+});
+
 export const ProjectSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   id,
@@ -155,6 +178,7 @@ export const ProjectSchema = z.object({
         .max(2000),
     })
     .optional(),
+  plant: PlantSchema.optional(),
 });
 
 const MAX_DEPTH = 40;

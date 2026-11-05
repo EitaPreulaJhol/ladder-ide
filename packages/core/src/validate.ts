@@ -7,6 +7,7 @@ import { forEachElement } from './edit.ts';
 import { familyCpu, getFamily } from './families.ts';
 import { getDialect } from './dialects.ts';
 import { validateGrafcets } from './grafcet.ts';
+import { validatePlant } from './plant/tags.ts';
 
 export interface Diagnostic {
   severity: 'error' | 'warning';
@@ -151,6 +152,7 @@ export function validateProject(project: Project): Diagnostic[] {
 
   checkProgramFlow(project, out);
   out.push(...validateGrafcets(project));
+  out.push(...validatePlant(project));
 
   for (const [name, n] of coilUses)
     if (n > 1)

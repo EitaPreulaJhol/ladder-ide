@@ -143,7 +143,8 @@ function Problems({ diagnostics }: { diagnostics: ReturnType<typeof validateProj
                           ?.scrollIntoView({ block: 'center' }),
                       0,
                     );
-                  } else if (d.tag) setView('tags');
+                  } else if (d.code.startsWith('plant')) setView('plant');
+                  else if (d.tag) setView('tags');
                 }}
               >
                 <td className={d.severity === 'error' ? 'sev error' : 'sev warning'}>
@@ -153,6 +154,7 @@ function Problems({ diagnostics }: { diagnostics: ReturnType<typeof validateProj
                   {t(`diag.${d.code}`, {
                     ...d.params,
                     operand: d.params?.operand ? t(`operand.${d.params.operand}`) : '',
+                    port: d.params?.port ? t(`builder.ports.${d.params.port}`) : '',
                   })}
                 </td>
                 <td className="muted">{rungIdx >= 0 ? t('bottom.rung', { n: rungIdx + 1 }) : d.tag}</td>

@@ -14,6 +14,7 @@ Ambiente web aberto (sem login) para **treinar, testar e planejar** programas La
 - **Telas de IHM** — editor de telas de operação (800 × 480) com botões, lâmpadas, displays, barras, entradas numéricas, navegação e gráficos, ligados às tags e operáveis durante a simulação.
 - **Painel de I/O virtual** — botões NA/NF, chaves, sensores, lâmpadas, displays e potenciômetros ligados às tags.
 - **Plantas virtuais com exercícios** — partida direta, estrela-triângulo, semáforo, esteira seletora, controle de nível liga/desliga, controle de nível com PID e cilindros pneumáticos A+ B+ A− B−, cada uma com enunciado, solução de referência e correção automática.
+- **Planta editável** — monte a planta com componentes (esteiras, alimentador, sensores, expulsor, caixas, cilindros, motores, tanques, bombas, válvulas, forno, sinalização e botões), ligue cada sinal a uma tag e opere durante a simulação. As plantas dos exercícios podem ser abertas como ponto de partida editável.
 - **Modelos reais de CLP** — Siemens S7-1200 (1211C/1212C/1214C/1215C), Allen-Bradley MicroLogix 1100/1400, Schneider Modicon M221 e Haiwell séries C/T: I/O embarcado, módulos de expansão com códigos de catálogo, limite de módulos por CPU, endereçamento padrão de cada fabricante e aviso de instruções que o modelo não tem. Dados tirados de manuais oficiais (fontes listadas na tela); pontos não confirmados aparecem marcados como "a confirmar".
 - **Planejamento de hardware** — rack genérico ou do modelo escolhido; endereços calculados automaticamente; lista de I/O e tags em CSV; versão para impressão.
 - **Funciona offline e pode ser instalado** (PWA): depois da primeira visita, editor, simulação e projetos salvos funcionam sem internet.
@@ -107,6 +108,7 @@ A ponte mostra um **código de pareamento**. Na IDE, abra Hardware → Ponte Mod
 - `CTU`/`CTD` contam bordas de subida; `CTUD` usa o 3º operando como entrada de decremento; `RES` zera temporizador/contador.
 - `INT` é 16 bits com estouro (32767 + 1 = −32768), `DINT` 32 bits, `REAL` ponto flutuante; `DIV` em destino inteiro trunca; divisão por zero não escreve e desliga a saída do bloco.
 - Entradas físicas (canais DI/AI ou endereços `I`) vêm da imagem de entradas a cada scan; tags forçadas ignoram escrita do programa.
+- A planta (fixa ou editável) roda depois de cada scan: lê as saídas do CLP, avança a física pelo `dt` e escreve os sensores na imagem de entradas do próximo scan. Botões, chaves e potenciômetros da planta só escrevem quando mudam, então o painel de I/O pode comandar a mesma tag.
 
 ## Idiomas
 

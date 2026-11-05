@@ -542,3 +542,68 @@ test('Modbus TCP bridge: a real Modbus client operates the simulation', async ({
     bridge.kill();
   }
 });
+
+test('editable plant: conveyor exercise rebuilt with components sorts a tall part', async ({ page }) => {
+  page.on('dialog', (d) => d.accept());
+  await page.goto('/');
+  await page.getByTestId('nav-plant').click();
+  await page.getByTestId('plant-template').selectOption('conveyor');
+  await page.getByTestId('plant-with-solution').check();
+  await page.getByTestId('plant-from-template').click();
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(0\)/);
+
+  await page.getByTestId('run').click();
+  await page.locator('.sim-controls select').selectOption('10');
+  const main = page.locator('.pc-main');
+  await main.getByTestId('pc-pushbutton-B_START').locator('circle').hover();
+  await page.mouse.down();
+  await expect(watch(page, 'M_BELT').getByRole('button')).toHaveText('1');
+  await page.mouse.up();
+
+  await main.getByRole('button', { name: '+ peça alta' }).click();
+  await expect(main.getByTestId('pc-bin-Rejeito')).toContainText('1', { timeout: 10_000 });
+  await expect(main.getByTestId('pc-bin-Saída')).toContainText('0');
+});
+
+test('editable plant: build from scratch, create tags, drag and operate', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('new-project').click();
+  await page.getByTestId('nav-plant').click();
+  await page.getByTestId('plant-blank').click();
+  await page.getByTestId('pc-add-selector').click();
+  await page.getByTestId('pc-add-lamp').click();
+  // The empty rung of the new project, plus the two unbound signals.
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(3\)/);
+  await page.locator('.pc-canvas-wrap svg').click({ position: { x: 5, y: 5 } });
+  await page.getByTestId('plant-create-tags').click();
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(1\)/);
+
+  // Drag the lamp 100 px to the right.
+  const lamp = page.locator('.pc-main').getByTestId('pc-lamp-H1');
+  const before = await lamp.getAttribute('transform');
+  const box = (await page.getByTestId('pc-hit-H1').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 100, box.y + box.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await expect(lamp).not.toHaveAttribute('transform', before!);
+
+  // H1 := SW1
+  await page.getByTestId('nav-editor').click();
+  await page.getByTestId('palette-NO').click();
+  const op = page.locator('.props input[data-operand="0"]');
+  await op.fill('SW1');
+  await op.press('Enter');
+  await page.getByTestId('palette-COIL').click();
+  await op.fill('H1');
+  await op.press('Enter');
+
+  await page.getByTestId('nav-plant').click();
+  await page.getByTestId('plant-edit').click(); // back to operate mode
+  await page.getByTestId('run').click();
+  const bulb = page.locator('.pc-main [data-testid="pc-lamp-H1"] circle');
+  await expect(bulb).toHaveAttribute('fill', '#1f2937');
+  await page.locator('.pc-main [data-testid="pc-selector-SW1"]').click();
+  await expect(bulb).toHaveAttribute('fill', '#22c55e');
+});

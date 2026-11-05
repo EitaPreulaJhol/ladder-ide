@@ -372,6 +372,36 @@ export function findFreeChannel(
   return null;
 }
 
+/**
+ * Binds an I/O tag to a free channel of the given kind, adding a module to the
+ * rack when none is free. Keeps a binding that already points to a module of
+ * that kind. Mutates the project; returns false when no module fits.
+ */
+export function ensureIoBinding(project: Project, tag: Tag, kind: 'DI' | 'DO' | 'AI' | 'AO'): boolean {
+  const hw = project.hardware;
+  if (tag.io && hw.modules.some((m) => m.id === tag.io!.module && m.kind === kind)) return true;
+  delete tag.address;
+  let ch = findFreeChannel(project, [kind]);
+  if (!ch) {
+    const options = catalogFor(hw)
+      .filter((c) => c.kind === kind)
+      .sort((a, b) => b.channels - a.channels);
+    let slot: number | null;
+    if (hw.family === 'generic') {
+      const used = new Set(hw.modules.map((m) => m.slot));
+      slot = 0;
+      while (used.has(slot)) slot++;
+      if (slot >= hw.slots) hw.slots = slot + 1;
+    } else slot = nextFreeSlot(hw);
+    if (options[0] && slot !== null) {
+      hw.modules.push(createModule(options[0].id, slot, hw));
+      ch = findFreeChannel(project, [kind]);
+    }
+  }
+  if (ch) tag.io = ch;
+  return ch !== null;
+}
+
 function csvCell(v: string | number | undefined): string {
   const s = String(v ?? '');
   return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

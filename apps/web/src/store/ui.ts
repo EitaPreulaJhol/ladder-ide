@@ -8,6 +8,9 @@ interface UiState {
   /** Tag whose value is being explained ("por que?"), highlighted in the rungs. */
   explain: string | null;
   setExplain(tag: string | null): void;
+  /** Plant view in edit mode (a blank plant starts in it). */
+  plantEditing: boolean;
+  setPlantEditing(v: boolean): void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -15,4 +18,6 @@ export const useUi = create<UiState>((set) => ({
   setDock: (d) => set((s) => ({ dock: typeof d === 'function' ? d(s.dock) : d })),
   explain: null,
   setExplain: (explain) => set({ explain }),
+  plantEditing: false,
+  setPlantEditing: (plantEditing) => set({ plantEditing }),
 }));

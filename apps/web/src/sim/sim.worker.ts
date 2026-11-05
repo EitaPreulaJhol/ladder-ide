@@ -7,11 +7,14 @@
 import {
   FieldFaults,
   getScenario,
+  plantRunner,
+  reconcilePlantState,
   SignalRecorder,
   Simulator,
   type PlantIo,
+  type PlantRunner,
+  type PlantState,
   type Project,
-  type ScenarioDef,
 } from '@ladder/core';
 import type { FaultEvent, FromWorker, SimStatus, ToWorker } from './protocol.ts';
 
@@ -19,10 +22,12 @@ let sim: Simulator | null = null;
 let project: Project | null = null;
 let status: SimStatus = 'stopped';
 let speed = 1;
-// The active scenario's state type is only known at runtime.
+// The plant is either a fixed scenario or an editable design; its state type is only known at runtime.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let scenario: ScenarioDef<any> | undefined;
+let scenario: PlantRunner<any> | undefined;
 let plantState: unknown = null;
+/** Identity of the running plant: `scenario:<id>`, `design` or ''. */
+let plantKind = '';
 let lastTick = performance.now();
 let budget = 0;
 let scansWindow = 0;
@@ -73,14 +78,39 @@ function post() {
   postMessage(msg);
 }
 
-function initPlant() {
-  scenario = getScenario(project?.scenarioId);
-  plantState = scenario ? scenario.init() : null;
+const plantKindOf = (p: Project | null) =>
+  p?.plant ? 'design' : p?.scenarioId ? `scenario:${p.scenarioId}` : '';
+
+/** Lets the plant publish its sensors so inputs are coherent before the next scan. */
+function publishPlant() {
   if (scenario && sim) {
-    // Let the plant publish its sensors once so inputs are coherent before the first scan.
     scenario.step(plantState, 0, io);
     sim.refreshInputs();
   }
+}
+
+function initPlant() {
+  plantKind = plantKindOf(project);
+  scenario = project?.plant ? plantRunner(project.plant) : getScenario(project?.scenarioId);
+  plantState = scenario ? scenario.init() : null;
+  publishPlant();
+}
+
+/** Picks up plant edits: same kind of plant keeps its state (levels, parts, positions). */
+function syncPlant() {
+  if (plantKindOf(project) !== plantKind) return initPlant();
+  if (project?.plant) {
+    scenario = plantRunner(project.plant);
+    reconcilePlantState(plantState as PlantState, project.plant);
+    publishPlant();
+  }
+}
+
+function resetSim() {
+  sim?.reset();
+  resetTrend();
+  // The PLC restarts with the tags' initial values; the field (plant) does not.
+  publishPlant();
 }
 
 function scanOnce() {
@@ -121,14 +151,14 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
   const m = e.data;
   switch (m.type) {
     case 'load': {
-      const scenarioChanged = project?.scenarioId !== m.project.scenarioId;
       const projectChanged = project?.id !== m.project.id;
       project = m.project;
       if (!sim) sim = new Simulator(m.project);
       else sim.load(m.project);
       if (projectChanged) fieldFaults.clear(sim);
       else fieldFaults.reapply(m.project, sim);
-      if (scenarioChanged) initPlant();
+      if (projectChanged) initPlant();
+      else syncPlant();
       // Trend tab signals plus the tags shown by trend widgets on HMI screens.
       recorder.setSignals([
         ...(m.project.trend ?? []),
@@ -136,17 +166,12 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
           sc.widgets.filter((w) => w.kind === 'trend' && w.tag).map((w) => w.tag),
         ),
       ]);
-      if (status === 'stopped') {
-        sim.reset();
-        resetTrend();
-      } else recorder.sample(sim, sim.timeMs); // first point of newly added signals
+      if (status === 'stopped') resetSim();
+      else recorder.sample(sim, sim.timeMs); // first point of newly added signals
       break;
     }
     case 'run':
-      if (status === 'stopped') {
-        sim?.reset();
-        resetTrend();
-      }
+      if (status === 'stopped') resetSim();
       status = 'running';
       budget = 0;
       lastTick = performance.now();
@@ -156,14 +181,10 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       break;
     case 'stop':
       status = 'stopped';
-      sim?.reset();
-      resetTrend();
+      resetSim();
       break;
     case 'step':
-      if (status === 'stopped') {
-        sim?.reset();
-        resetTrend();
-      }
+      if (status === 'stopped') resetSim();
       status = 'paused';
       scanOnce();
       break;

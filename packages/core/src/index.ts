@@ -23,3 +23,7 @@ export * from './grafcet.ts';
 export * from './xml.ts';
 export * from './plcopen.ts';
 export * from './modbus.ts';
+export * from './plant/components.ts';
+export * from './plant/engine.ts';
+export * from './plant/templates.ts';
+export * from './plant/tags.ts';

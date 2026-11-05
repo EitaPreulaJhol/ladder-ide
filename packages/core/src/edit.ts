@@ -182,7 +182,7 @@ function renameOperand(text: string, from: string, to: string): string {
   return dot < 0 ? to : to + s.slice(dot);
 }
 
-/** Renames a tag and every reference to it (operands, I/O panel). Mutates the project. */
+/** Renames a tag and every reference to it (operands, panels, HMI, Modbus, GRAFCET, plant). Mutates the project. */
 export function renameTag(project: Project, from: string, to: string): void {
   const tag = project.tags.find((t) => t.name === from);
   if (!tag) return;
@@ -191,6 +191,18 @@ export function renameTag(project: Project, from: string, to: string): void {
     for (const r of prog.rungs)
       forEachElement(r.body, (el) => (el.operands = el.operands.map((o) => renameOperand(o, from, to))));
   for (const w of project.ioPanel) if (w.tag === from) w.tag = to;
+  for (const sc of project.hmi?.screens ?? [])
+    for (const w of sc.widgets) if (w.tag) w.tag = renameOperand(w.tag, from, to);
+  for (const e of project.modbus?.map ?? []) if (e.tag === from) e.tag = to;
+  if (project.trend) project.trend = project.trend.map((s) => renameOperand(s, from, to));
+  // GRAFCET actions are tag names; conditions are expressions (`A0 & !B1`, `T#2s`).
+  const word = new RegExp(`(?<![A-Za-z0-9_#.])${from}(?![A-Za-z0-9_#])`, 'g');
+  for (const g of project.grafcets ?? []) {
+    for (const st of g.steps) st.actions = st.actions.map((a) => (a === from ? to : a));
+    for (const tr of g.transitions) tr.condition = tr.condition.replace(word, to);
+  }
+  for (const c of project.plant?.components ?? [])
+    for (const [port, tag] of Object.entries(c.tags)) if (tag === from) c.tags[port] = to;
 }
 
 /** Number of program references per tag name. */

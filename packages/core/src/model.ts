@@ -238,6 +238,57 @@ export interface ModbusEntry {
   address: number;
 }
 
+// ---------------------------------------------------------------- editable plant
+
+export type PlantComponentKind =
+  // part handling
+  | 'conveyor'
+  | 'feeder'
+  | 'partSensor'
+  | 'pusher'
+  | 'bin'
+  // actuators
+  | 'cylinder'
+  | 'motor'
+  // fluids
+  | 'tank'
+  | 'pump'
+  | 'valve'
+  // signalling and thermal
+  | 'lamp'
+  | 'siren'
+  | 'trafficLight'
+  | 'oven'
+  | 'display'
+  // operator
+  | 'pushbutton'
+  | 'selector'
+  | 'estop'
+  | 'potentiometer'
+  | 'label';
+
+export type PlantParam = number | boolean | string;
+
+/** One item of an editable plant: geometry, tag bindings per port and parameters (see plant/components.ts). */
+export interface PlantComponent {
+  id: string;
+  kind: PlantComponentKind;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label: string;
+  /** Port name → tag name. */
+  tags: Record<string, string>;
+  params: Record<string, PlantParam>;
+}
+
+export interface PlantDesign {
+  width: number;
+  height: number;
+  components: PlantComponent[];
+}
+
 export const HMI_WIDTH = 800;
 export const HMI_HEIGHT = 480;
 
@@ -271,6 +322,8 @@ export interface Project {
   grafcets?: Grafcet[];
   hmi?: { screens: HmiScreen[] };
   modbus?: { map: ModbusEntry[] };
+  /** Editable plant built from components (exclusive with `scenarioId`). */
+  plant?: PlantDesign;
 }
 
 // ---------------------------------------------------------------- runtime values

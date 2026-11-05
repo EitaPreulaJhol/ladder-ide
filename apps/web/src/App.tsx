@@ -15,12 +15,14 @@ import { HardwareView } from './components/HardwareView.tsx';
 import { ProjectsView } from './components/ProjectsView.tsx';
 import { DocView } from './components/DocView.tsx';
 import { HmiView } from './components/hmi/HmiView.tsx';
+import { PlantEditor } from './components/plantBuilder/PlantEditor.tsx';
 import { bootLocal, bootShared, forkShared, startAutosave } from './session.ts';
 
 const NAV: { id: View; icon: string }[] = [
   { id: 'editor', icon: '⊢' },
   { id: 'tags', icon: '#' },
   { id: 'hardware', icon: '▦' },
+  { id: 'plant', icon: '⚙' },
   { id: 'hmi', icon: '🖥' },
   { id: 'doc', icon: '🖨' },
   { id: 'projects', icon: '☰' },
@@ -42,7 +44,7 @@ export function App() {
   const loaded = useProject((s) => s.project !== null);
   const view = useProject((s) => s.view);
   const sharedId = useProject((s) => s.sharedId);
-  const scenarioId = useProject((s) => s.project?.scenarioId);
+  const hasPlant = useProject((s) => !!(s.project?.scenarioId || s.project?.plant));
   const setView = useProject((s) => s.setView);
   const dock = useUi((s) => s.dock);
   const setDock = useUi((s) => s.setDock);
@@ -60,8 +62,8 @@ export function App() {
 
   // Projects with a plant open on the plant tab.
   useEffect(() => {
-    if (scenarioId) setDock('plant');
-  }, [scenarioId, setDock]);
+    if (hasPlant) setDock('plant');
+  }, [hasPlant, setDock]);
 
   // Editing shows properties; starting the simulation brings back the plant / I/O panel.
   const selectedNode = useProject((s) => s.selection?.nodeId);
@@ -74,7 +76,7 @@ export function App() {
       // ...unless the user is reading an explanation ("por que?") in the properties tab.
       setDock((d) =>
         d === 'props' && !useUi.getState().explain
-          ? useProject.getState().project.scenarioId
+          ? useProject.getState().project.scenarioId || useProject.getState().project.plant
             ? 'plant'
             : 'panel'
           : d,
@@ -136,6 +138,7 @@ export function App() {
             {view === 'editor' && <LadderEditor />}
             {view === 'tags' && <TagsView />}
             {view === 'hardware' && <HardwareView />}
+            {view === 'plant' && <PlantEditor />}
             {view === 'hmi' && <HmiView />}
             {view === 'doc' && <DocView />}
             {view === 'projects' && <ProjectsView />}

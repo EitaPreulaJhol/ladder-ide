@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { applyScenario, getScenario, SCENARIOS } from '@ladder/core';
 import { useProject } from '../store/project.ts';
@@ -24,7 +25,13 @@ export function PlantView() {
   const readOnly = useProject((s) => s.sharedId !== null);
   const update = useProject((s) => s.update);
   const state = useSim((s) => s.scenarioState);
-  const values = useSim((s) => s.snapshot?.values);
+  const plcValues = useSim((s) => s.snapshot?.values);
+  // The plant is the field: faulty outputs (welded / burnt contactor) override what the PLC commands.
+  const fieldOutputs = useSim((s) => s.faults.outputs);
+  const values = useMemo(
+    () => (plcValues && Object.keys(fieldOutputs).length ? { ...plcValues, ...fieldOutputs } : plcValues),
+    [plcValues, fieldOutputs],
+  );
   const { setInput, plantAction, send } = useSim.getState();
   const scenario = getScenario(scenarioId);
 

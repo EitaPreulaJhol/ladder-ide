@@ -100,6 +100,8 @@ export class Simulator {
   private inputTags = new Set<string>();
   private values = new Map<string, Value>();
   private inputImage = new Map<string, boolean | number>();
+  /** Field faults on inputs (stuck sensor, broken wire): override the input image, invisible as forces. */
+  private inputFaults = new Map<string, boolean | number>();
   private forces = new Map<string, boolean | number>();
   private edgeMem = new Map<string, boolean>();
   private trace: Trace = {};
@@ -158,7 +160,22 @@ export class Simulator {
     this.faults.clear();
     this.timeMs = 0;
     this.scanCount = 0;
-    for (const [name, v] of this.inputImage) this.values.set(name, this.coerce(name, v));
+    this.applyInputs();
+  }
+
+  /** Input image (with field faults) into memory, then forces. Priority: force > fault > field. */
+  private applyInputs(): void {
+    for (const [name, v] of this.inputImage)
+      if (!this.forces.has(name) && !this.inputFaults.has(name)) this.values.set(name, this.coerce(name, v));
+    for (const [name, v] of this.inputFaults)
+      if (!this.forces.has(name) && this.inputTags.has(name)) this.values.set(name, this.coerce(name, v));
+    for (const [name, v] of this.forces) this.values.set(name, this.coerce(name, v));
+  }
+
+  /** Simulates a field fault on an input tag (undefined clears it). */
+  setInputFault(name: string, value: boolean | number | undefined): void {
+    if (value === undefined) this.inputFaults.delete(name);
+    else if (this.inputTags.has(name)) this.inputFaults.set(name, value);
   }
 
   isInputTag(name: string): boolean {
@@ -185,8 +202,7 @@ export class Simulator {
 
   /** Copies the input image into memory without running the program (keeps the display live in STOP). */
   refreshInputs(): void {
-    for (const [name, v] of this.inputImage)
-      if (!this.forces.has(name)) this.values.set(name, this.coerce(name, v));
+    this.applyInputs();
   }
 
   getValue(name: string): Value | undefined {
@@ -217,9 +233,7 @@ export class Simulator {
     this.trace = {};
     this.writers = {};
 
-    for (const [name, v] of this.inputImage)
-      if (!this.forces.has(name)) this.values.set(name, this.coerce(name, v));
-    for (const [name, v] of this.forces) this.values.set(name, this.coerce(name, v));
+    this.applyInputs();
 
     for (const prog of this.project.programs) for (const rung of prog.rungs) this.evalSeries(rung.body, true);
   }

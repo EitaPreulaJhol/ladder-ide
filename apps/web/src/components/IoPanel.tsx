@@ -24,6 +24,8 @@ export function IoPanel() {
   const readOnly = useProject((s) => s.sharedId !== null);
   const update = useProject((s) => s.update);
   const values = useSim((s) => s.snapshot?.values);
+  // Field devices show the field: a faulty output (welded / burnt) overrides the PLC value.
+  const fieldOutputs = useSim((s) => s.faults.outputs);
   const setInput = useSim((s) => s.setInput);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<{ kind: WidgetKind; tag: string; label: string }>({
@@ -62,7 +64,7 @@ export function IoPanel() {
       <div className="widgets">
         {widgets.map((w) => (
           <div key={w.id} className="widget-wrap">
-            <Widget w={w} value={values?.[w.tag]} setInput={setInput} />
+            <Widget w={w} value={fieldOutputs[w.tag] ?? values?.[w.tag]} setInput={setInput} />
             {editing && (
               <div className="widget-edit">
                 <input

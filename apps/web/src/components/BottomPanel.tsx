@@ -5,6 +5,7 @@ import { useProject } from '../store/project.ts';
 import { useSim } from '../store/sim.ts';
 import { formatMs, formatValue } from './editor/format.ts';
 import { signalsForTag, TrendPanel } from './trend/TrendPanel.tsx';
+import { FaultPanel } from './FaultPanel.tsx';
 import { useUi } from '../store/ui.ts';
 import { goToElement } from '../navigation.ts';
 
@@ -27,6 +28,8 @@ export function BottomPanel() {
   const [collapsed, setCollapsed] = useState(false);
   const [height, setHeight] = useState(loadHeight);
   const errors = diagnostics.filter((d) => d.severity === 'error').length;
+  const faultCount = useSim((s) => s.faults.visible.length);
+  const challenge = useSim((s) => s.faults.challenge);
 
   /** Drag the top edge to resize; the height is remembered in this browser. */
   const startResize = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -84,6 +87,15 @@ export function BottomPanel() {
           {t('bottom.trend')}
         </button>
         <button
+          className={tab === 'faults' ? 'active' : ''}
+          onClick={() => (setTab('faults'), setCollapsed(false))}
+          data-testid="faults-tab"
+        >
+          {t('bottom.faults')}
+          {faultCount > 0 ? ` (${faultCount})` : ''}
+          {challenge ? ' 🕵' : ''}
+        </button>
+        <button
           className={`${tab === 'problems' ? 'active' : ''} ${errors ? 'has-errors' : ''}`}
           onClick={() => (setTab('problems'), setCollapsed(false))}
           data-testid="problems-tab"
@@ -97,6 +109,7 @@ export function BottomPanel() {
       </div>
       {!collapsed && tab === 'watch' && <WatchTable />}
       {!collapsed && tab === 'trend' && <TrendPanel />}
+      {!collapsed && tab === 'faults' && <FaultPanel />}
       {!collapsed && tab === 'problems' && <Problems diagnostics={diagnostics} />}
     </div>
   );

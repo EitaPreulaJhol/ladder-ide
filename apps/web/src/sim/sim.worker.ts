@@ -5,6 +5,7 @@
  * simulated time passes per real millisecond.
  */
 import {
+  FieldFaults,
   getScenario,
   SignalRecorder,
   Simulator,
@@ -12,7 +13,7 @@ import {
   type Project,
   type ScenarioDef,
 } from '@ladder/core';
-import type { FromWorker, SimStatus, ToWorker } from './protocol.ts';
+import type { FaultEvent, FromWorker, SimStatus, ToWorker } from './protocol.ts';
 
 let sim: Simulator | null = null;
 let project: Project | null = null;
@@ -27,6 +28,8 @@ let scansPerSecond = 0;
 let windowStart = performance.now();
 const MAX_SCANS_PER_TICK = 5000;
 const recorder = new SignalRecorder();
+const fieldFaults = new FieldFaults();
+let faultEvent: FaultEvent | undefined;
 let trendReset = true;
 
 function resetTrend() {
@@ -37,6 +40,9 @@ function resetTrend() {
 
 const io: PlantIo = {
   get: (name) => {
+    // The plant sees the field: a faulty output overrides what the PLC commands.
+    const field = fieldFaults.outputOverride(name);
+    if (field !== undefined) return field;
     const v = sim?.getValue(name);
     return typeof v === 'boolean' || typeof v === 'number' ? v : false;
   },
@@ -52,8 +58,16 @@ function post() {
     scenarioState: plantState,
     scansPerSecond,
     trend: { events: recorder.drain(), endMs: recorder.endMs, reset: trendReset },
+    faults: {
+      visible: fieldFaults.visible(),
+      challenge: fieldFaults.challengeActive,
+      attempts: fieldFaults.attempts,
+      outputs: fieldFaults.outputOverrides(),
+    },
+    faultEvent,
   };
   trendReset = false;
+  faultEvent = undefined;
   postMessage(msg);
 }
 
@@ -106,9 +120,12 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
   switch (m.type) {
     case 'load': {
       const scenarioChanged = project?.scenarioId !== m.project.scenarioId;
+      const projectChanged = project?.id !== m.project.id;
       project = m.project;
       if (!sim) sim = new Simulator(m.project);
       else sim.load(m.project);
+      if (projectChanged) fieldFaults.clear(sim);
+      else fieldFaults.reapply(m.project, sim);
       if (scenarioChanged) initPlant();
       recorder.setSignals(m.project.trend ?? []);
       if (status === 'stopped') {
@@ -162,6 +179,32 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
     case 'resetPlant':
       initPlant();
       break;
+    case 'addFault':
+      if (sim && project) fieldFaults.add(project, sim, m.signal, m.kind);
+      break;
+    case 'removeFault':
+      if (sim) fieldFaults.remove(sim, m.signal);
+      break;
+    case 'clearFaults':
+      if (sim) fieldFaults.clear(sim);
+      break;
+    case 'startChallenge':
+      if (sim && project)
+        faultEvent = { type: 'challengeStarted', ok: fieldFaults.startChallenge(project, sim) };
+      break;
+    case 'guessFault':
+      if (sim)
+        faultEvent = {
+          type: 'guess',
+          result: fieldFaults.guess(sim, m.signal, m.kind),
+          attempts: fieldFaults.attempts,
+        };
+      break;
+    case 'revealFault':
+      if (sim)
+        faultEvent = { type: 'revealed', fault: fieldFaults.reveal(sim), attempts: fieldFaults.attempts };
+      break;
   }
+  if (sim && status !== 'running') sim.refreshInputs();
   post();
 };

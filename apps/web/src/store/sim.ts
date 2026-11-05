@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import type { CheckResult, Project, SimSnapshot, TrendEvent } from '@ladder/core';
-import type { FromWorker, SimStatus, ToWorker } from '../sim/protocol.ts';
+import type { FaultEvent, FaultState, FromWorker, SimStatus, ToWorker } from '../sim/protocol.ts';
 import { useProject } from './project.ts';
 
-export type BottomTab = 'watch' | 'trend' | 'problems';
+export type BottomTab = 'watch' | 'trend' | 'faults' | 'problems';
 
 /** Live trend data, mutated in place (arrays can be long); `trendVersion` triggers re-renders. */
 export const liveTrend: { events: Record<string, TrendEvent[]>; endMs: number } = { events: {}, endMs: 0 };
@@ -16,6 +16,9 @@ export interface TrendCapture {
 }
 
 interface SimState {
+  faults: FaultState;
+  /** Last challenge answer (kept until the next one). */
+  faultEvent: FaultEvent | null;
   trendVersion: number;
   bottomTab: BottomTab;
   capture: TrendCapture | null;
@@ -71,9 +74,13 @@ export const useSim = create<SimState>((set) => {
       snapshot: m.snapshot,
       scenarioState: m.scenarioState,
       scansPerSecond: m.scansPerSecond,
+      faults: m.faults,
+      faultEvent: m.faultEvent ?? st.faultEvent,
     }));
   };
   return {
+    faults: { visible: [], challenge: false, attempts: 0, outputs: {} },
+    faultEvent: null,
     trendVersion: 0,
     bottomTab: 'watch',
     capture: null,

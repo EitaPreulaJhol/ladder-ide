@@ -1834,3 +1834,44 @@ table.grid tr.unused td {
   opacity: 1;
   filter: none;
 }
+
+/* ------------------------------------------------------------ faults */
+
+.faults {
+  padding: 8px 14px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 18px;
+}
+.faults h4 {
+  margin: 4px 0;
+}
+.faults p {
+  margin: 4px 0 8px;
+}
+.fault-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.fault-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fault-list li .mono {
+  font-weight: 600;
+  min-width: 90px;
+}
+.challenge {
+  border-left: 1px solid var(--border);
+  padding-left: 18px;
+}
+.ok-text {
+  color: var(--status-run-text);
+  font-weight: 600;
+}

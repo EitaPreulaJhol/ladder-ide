@@ -233,3 +233,40 @@ test('cross reference and "why?" explanation of a coil', async ({ page }) => {
   await expect(explain).toContainText('energizada');
   await expect(explain).not.toContainText('bloqueia aqui');
 });
+
+test('field faults: burnt contactor and hidden fault challenge', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-scenario:motor').click();
+  await page.getByTestId('run').click();
+  await page.getByTestId('faults-tab').click();
+
+  // Output fault: the PLC commands K_MOTOR, but the contactor never pulls in.
+  await page.getByTestId('fault-signal').selectOption('K_MOTOR');
+  await page.getByTestId('fault-kind').selectOption('stuckOff');
+  await page.getByTestId('fault-add').click();
+  await expect(page.getByTestId('fault-K_MOTOR')).toBeVisible();
+  await page.getByTestId('dock-plant').click();
+  await page.getByTestId('plant-B_START').hover();
+  await page.mouse.down();
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await page.waitForTimeout(1200);
+  await expect(page.locator('.plant-svg').getByText('M 0%')).toBeVisible();
+  await page.getByTestId('fault-K_MOTOR').getByRole('button').click();
+  await expect(page.locator('.plant-svg').getByText('M 0%')).toHaveCount(0, { timeout: 5000 });
+
+  // Challenge: a hidden fault, a wrong guess, then give up and reveal it.
+  await page.getByTestId('challenge-start').click();
+  await expect(page.getByTestId('guess-signal')).toBeVisible();
+  await expect(page.getByTestId('faults-tab')).toContainText('🕵');
+  await page.getByTestId('guess-signal').selectOption('H_FAULT');
+  await page.getByTestId('guess-kind').selectOption('stuckOn');
+  await page.getByTestId('guess-submit').click();
+  await expect(page.getByTestId('challenge-result')).toContainText(/✗|✓/);
+  if (await page.getByText('Desistir e revelar').isVisible()) {
+    await page.getByText('Desistir e revelar').click();
+    await expect(page.getByTestId('challenge-result')).toContainText('A falha era');
+  }
+  await expect(page.getByTestId('challenge-start')).toBeVisible();
+});

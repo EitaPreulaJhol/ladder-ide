@@ -18,3 +18,4 @@ export * from './families.ts';
 export * from './sim/recorder.ts';
 export * from './scenarios/checks.ts';
 export * from './xref.ts';
+export * from './faults.ts';

@@ -8,6 +8,7 @@ Ambiente web aberto (sem login) para **treinar, testar e planejar** programas La
 - **Gráfico de tendência** — sinais (tags ou membros como `T1.DN`) registrados scan a scan, com cursor, janela de tempo e exportação em CSV.
 - **Correção automática dos exercícios** — "Verificar solução" roda o programa numa simulação isolada e acelerada da planta e confere cada critério; a gravação de cada teste abre no gráfico de tendência.
 - **"Por que?" e referência cruzada** — explica o valor de uma tag durante a simulação (quem escreveu por último, caminho de energia, contato que bloqueia, bobina dupla) e lista onde cada tag é lida e escrita.
+- **Injeção de falhas** — sensores travados, fio rompido, contatos colados e saídas queimadas no campo (não no programa), mais um desafio de falha escondida para treinar diagnóstico.
 - **Painel de I/O virtual** — botões NA/NF, chaves, sensores, lâmpadas, displays e potenciômetros ligados às tags.
 - **Plantas virtuais com exercícios** — partida direta, estrela-triângulo, semáforo, esteira seletora e controle de nível, cada uma com enunciado e solução de referência.
 - **Modelos reais de CLP** — Siemens S7-1200 (1211C/1212C/1214C/1215C), Allen-Bradley MicroLogix 1100/1400, Schneider Modicon M221 e Haiwell séries C/T: I/O embarcado, módulos de expansão com códigos de catálogo, limite de módulos por CPU, endereçamento padrão de cada fabricante e aviso de instruções que o modelo não tem. Dados tirados de manuais oficiais (fontes listadas na tela); pontos não confirmados aparecem marcados como "a confirmar".

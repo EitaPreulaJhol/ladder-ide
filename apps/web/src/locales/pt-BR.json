@@ -149,7 +149,8 @@
     "rung": "Rung {{n}}",
     "go": "Ir",
     "trend": "Tendência",
-    "resize": "Redimensionar painel (arraste ou use as setas)"
+    "resize": "Redimensionar painel (arraste ou use as setas)",
+    "faults": "Falhas"
   },
   "diag": {
     "emptyRung": "Rung vazio",
@@ -466,6 +467,53 @@
       "ok": "conduz",
       "block": "bloqueia",
       "idle": "não avaliado (sem energia)"
+    }
+  },
+  "faults": {
+    "inject": "Injetar falha no campo",
+    "help": "As falhas ficam nos sensores, na fiação e nos contatores, nunca no programa. Falha em entrada muda o que o CLP lê; falha em saída muda o que o campo faz, mesmo com a saída do CLP correta. É assim que se pratica diagnóstico de defeitos.",
+    "signal": "Sinal",
+    "kind": "Tipo de falha",
+    "add": "Injetar",
+    "remove": "Remover falha de {{signal}}",
+    "clearAll": "Remover todas as falhas",
+    "inputs": "Entradas (sensores, botões)",
+    "outputs": "Saídas (contatores, lâmpadas, válvulas)",
+    "noCandidates": "Este projeto não tem tags ligadas a entradas ou saídas físicas. Vincule tags ao hardware ou use uma planta virtual.",
+    "challenge": "Desafio: falha surpresa",
+    "challengeHelp": "Uma falha aleatória e escondida é injetada num sinal usado pelo programa. Opere a planta, use a Monitoração, o gráfico de Tendência e o 🔎 \"Por que?\" para descobrir qual é.",
+    "challengeStart": "Iniciar desafio",
+    "challengeNone": "Nenhum sinal digital de campo é usado pelo programa: não há onde esconder uma falha.",
+    "challengeActive": "Há uma falha escondida no campo. Qual sinal está com defeito e qual é o defeito?",
+    "answer": "Responder",
+    "giveUp": "Desistir e revelar",
+    "correct": "Correto! Falha encontrada em {{attempts}} tentativa(s). A falha foi reparada.",
+    "revealed": "A falha era: {{signal}} — {{kind}}. Ela foi removida.",
+    "wrongSignal": "Esse sinal está funcionando normalmente",
+    "wrongKind": "O sinal está certo, mas o defeito é outro",
+    "noChallenge": "Nenhum desafio ativo",
+    "attempts": "tentativas: {{n}}",
+    "kinds": {
+      "input": {
+        "digital": {
+          "stuckOn": "Sensor travado em 1 (sempre acionado)",
+          "stuckOff": "Fio rompido / sensor travado em 0"
+        },
+        "analog": {
+          "stuckOff": "Fio rompido (leitura 0)",
+          "frozen": "Transmissor congelado no valor atual"
+        }
+      },
+      "output": {
+        "digital": {
+          "stuckOn": "Contato colado (sempre ligado no campo)",
+          "stuckOff": "Saída queimada / bobina aberta (nunca liga no campo)"
+        },
+        "analog": {
+          "stuckOff": "Saída analógica sem sinal (0)",
+          "frozen": "Saída analógica congelada"
+        }
+      }
     }
   }
 }

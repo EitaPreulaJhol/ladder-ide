@@ -307,6 +307,15 @@ export function tagAddress(tag: Tag, project: Pick<Project, 'hardware' | 'dialec
   return '';
 }
 
+/** True for tags that drive field devices (output modules or Q area). */
+export function isOutputTag(tag: Tag, hw: HardwareConfig): boolean {
+  if (tag.io) {
+    const m = hw.modules.find((x) => x.id === tag.io!.module);
+    return !!m && (m.kind === 'DO' || m.kind === 'AO');
+  }
+  return tag.address?.area === 'Q';
+}
+
 /** True for tags whose value comes from the field (input modules or I area). */
 export function isInputTag(tag: Tag, hw: HardwareConfig): boolean {
   if (tag.io) {

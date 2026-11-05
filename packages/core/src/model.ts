@@ -118,6 +118,39 @@ export interface Program {
   rungs: Rung[];
   /** 'main' (default) runs every scan in program order; 'sub' runs only when called (CALL/JSR). */
   kind?: 'main' | 'sub';
+  /** Id of the GRAFCET this program is generated from (read-only in the editor). */
+  generatedBy?: string;
+}
+
+// ---------------------------------------------------------------- GRAFCET (SFC)
+
+export interface GrafcetStep {
+  id: string;
+  /** Continuous (N) actions: BOOL tags kept on while the step is active. */
+  actions: string[];
+  comment?: string;
+}
+
+export interface GrafcetTransition {
+  id: string;
+  /** `A0 & B0 | !S1`, `T#2s` (time in the previous step). & binds tighter than |. */
+  condition: string;
+}
+
+/**
+ * Linear GRAFCET: transition i goes from step i to step i + 1; the last one goes
+ * back to step `loopTo`. Step 0 is the initial step.
+ */
+export interface Grafcet {
+  id: string;
+  name: string;
+  /** Prefix of the generated tags (step bits `<prefix>X0`, step timers `<prefix>T0`). */
+  prefix: string;
+  steps: GrafcetStep[];
+  transitions: GrafcetTransition[];
+  loopTo: number;
+  /** Generated ladder program. */
+  programId: string;
 }
 
 // ---------------------------------------------------------------- hardware
@@ -187,6 +220,7 @@ export interface Project {
   sim: SimSettings;
   /** Signals shown in the trend chart (tags or members such as `T1.DN`). */
   trend?: string[];
+  grafcets?: Grafcet[];
 }
 
 // ---------------------------------------------------------------- runtime values

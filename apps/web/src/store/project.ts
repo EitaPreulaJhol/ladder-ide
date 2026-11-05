@@ -23,6 +23,9 @@ import {
   channelType,
   forEachElement,
   newId,
+  createGrafcet,
+  syncGrafcet,
+  type Grafcet,
   type InstructionId,
   type LadderNode,
   type Program,
@@ -73,6 +76,9 @@ interface State {
   addProgram(kind: 'main' | 'sub', name: string): void;
   renameProgram(id: string, name: string): boolean;
   deleteProgram(id: string): void;
+  addGrafcet(name: string): void;
+  /** Edits a GRAFCET; its ladder program is regenerated in the same undo step. */
+  updateGrafcet(id: string, fn: (g: Draft<Grafcet>) => void): void;
   moveProgram(id: string, delta: number): void;
   setProgramKind(id: string, kind: 'main' | 'sub'): void;
 
@@ -262,12 +268,32 @@ export const useProject = create<State>((set, get) => {
       if (project.programs.length <= 1) return;
       const idx = project.programs.findIndex((p) => p.id === id);
       commit((d) => {
+        const prog = d.programs.find((p) => p.id === id);
         d.programs = d.programs.filter((p) => p.id !== id);
+        // A generated program goes away together with its GRAFCET.
+        if (prog?.generatedBy) d.grafcets = (d.grafcets ?? []).filter((g) => g.id !== prog.generatedBy);
       });
       if (programId === id) {
         const next = get().project.programs[Math.max(0, idx - 1)]!;
         set({ programId: next.id, selection: null, cursor: null });
       }
+    },
+
+    addGrafcet(name) {
+      let programId = '';
+      commit((d) => {
+        programId = createGrafcet(d as Project, name).programId;
+      });
+      if (programId) set({ programId, selection: null, cursor: null });
+    },
+
+    updateGrafcet(id, fn) {
+      commit((d) => {
+        const g = d.grafcets?.find((x) => x.id === id);
+        if (!g) return;
+        fn(g);
+        syncGrafcet(d as Project, id);
+      });
     },
 
     moveProgram(id, delta) {

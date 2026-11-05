@@ -6,6 +6,7 @@ import { trafficScenario } from './traffic.ts';
 import { conveyorScenario } from './conveyor.ts';
 import { tankScenario } from './tank.ts';
 import { tankPidScenario } from './tankPid.ts';
+import { cylindersScenario } from './cylinders.ts';
 import { catalogFor, createModule, findFreeChannel, nextFreeSlot } from '../hardware.ts';
 
 export * from './types.ts';
@@ -18,6 +19,8 @@ export type { ConveyorState, Box } from './conveyor.ts';
 export type { TankState } from './tank.ts';
 export type { TankPidState } from './tankPid.ts';
 export { TANK_PID } from './tankPid.ts';
+export type { CylindersState, Cylinder } from './cylinders.ts';
+export { CYL } from './cylinders.ts';
 
 // Scenarios have different state types (motor, tank...): heterogeneous registry.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,6 +31,7 @@ export const SCENARIOS: ScenarioDef<any>[] = [
   conveyorScenario,
   tankScenario,
   tankPidScenario,
+  cylindersScenario,
 ];
 
 export const getScenario = (id: string | undefined) => SCENARIOS.find((s) => s.id === id);

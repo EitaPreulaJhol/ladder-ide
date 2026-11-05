@@ -372,3 +372,51 @@ test('project documentation lists programs, tags and I/O', async ({ page }) => {
   await expect(page.locator('.doc-table').first()).toContainText('H_ALARME');
   await expect(page.getByTestId('doc-print')).toBeVisible();
 });
+
+test('GRAFCET: live steps, generated ladder and automatic checks', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-grafcetCylinders').click();
+  await expect(page.getByTestId('grafcet')).toBeVisible();
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(0\)/);
+
+  await page.getByTestId('run').click();
+  await expect(page.getByTestId('g-step-0')).toHaveClass(/active/);
+  await page.getByTestId('dock-plant').click();
+  await page.getByTestId('plant-B_START').hover();
+  await page.mouse.down();
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await expect(page.getByTestId('g-step-1')).toHaveClass(/active/);
+  await expect(page.getByTestId('g-step-2')).toHaveClass(/active/, { timeout: 4000 });
+
+  // The ladder is generated and read-only.
+  await page.getByTestId('show-ladder').click();
+  await expect(page.getByTestId('el-COIL-Y_A')).toBeVisible();
+  await expect(page.locator('.palette')).toHaveCount(0);
+  await page.getByTestId('show-grafcet').click();
+
+  await page.getByTestId('stop').click();
+  await page.getByTestId('run-checks').click();
+  await expect(page.getByTestId('checks-score')).toHaveText(/4 de 4/, { timeout: 10_000 });
+
+  // Breaking a condition shows up in the problems and in the checks.
+  await page.getByTestId('g-cond-1').fill('');
+  await page.getByTestId('g-cond-1').press('Enter');
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(1\)/);
+});
+
+test('a new GRAFCET starts with two steps and empty conditions flagged', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('new-project').click();
+  await page.getByTestId('add-grafcet').click();
+  await expect(page.getByTestId('g-step-0')).toBeVisible();
+  await expect(page.getByTestId('g-step-1')).toBeVisible();
+  await page.getByTestId('g-add-1').click();
+  await expect(page.getByTestId('g-step-2')).toBeVisible();
+  await page.getByTestId('g-actions-1').fill('LAMPADA');
+  await page.getByTestId('g-actions-1').press('Enter');
+  await page.getByTestId('show-ladder').click();
+  await expect(page.getByTestId('el-COIL-LAMPADA')).toBeVisible();
+});

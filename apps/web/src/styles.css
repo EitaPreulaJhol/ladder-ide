@@ -2029,3 +2029,119 @@ table.grid tr.unused td {
     fill: transparent;
   }
 }
+
+/* ------------------------------------------------------------ GRAFCET */
+
+.grafcet-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+.grafcet {
+  max-width: 980px;
+}
+.grafcet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.grafcet-chart {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 30px;
+}
+.g-step-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.g-step {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--text);
+  background: var(--panel);
+  font: 700 16px var(--mono);
+}
+.g-step.initial {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+.g-step.active {
+  background: var(--status-run-bg);
+  border-color: var(--power);
+  color: var(--status-run-text);
+}
+.g-step.active::after {
+  content: '●';
+  position: absolute;
+  margin-top: 30px;
+  font-size: 10px;
+  color: var(--power);
+}
+.g-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.g-actions-link {
+  width: 18px;
+  border-top: 2px solid var(--text);
+}
+.g-actions input.mono {
+  flex: 1;
+  min-width: 140px;
+  border: 2px solid var(--text);
+  border-radius: 0;
+}
+.g-comment {
+  width: 160px;
+  font-size: 12px;
+}
+.g-tools {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+.g-transition {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 22px;
+  border-left: 2px solid var(--text);
+  padding: 14px 0 14px 0;
+  position: relative;
+}
+.g-bar {
+  width: 26px;
+  margin-left: -14px;
+  border-top: 4px solid var(--text);
+}
+.g-transition.fireable .g-bar {
+  border-top-color: var(--power);
+}
+.g-transition.fireable {
+  border-left-color: var(--power);
+}
+.g-tnum {
+  font: 11px var(--mono);
+  color: var(--muted);
+  min-width: 46px;
+}
+.g-transition input {
+  width: 280px;
+}
+.g-loop {
+  margin: 4px 0 0 30px;
+  color: var(--muted);
+  font-size: 13px;
+}

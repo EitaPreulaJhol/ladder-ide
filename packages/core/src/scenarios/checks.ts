@@ -18,6 +18,7 @@ import type { ConveyorState } from './conveyor.ts';
 import type { MotorState } from './motor.ts';
 import type { TankState } from './tank.ts';
 import type { TankPidState } from './tankPid.ts';
+import type { CylindersState } from './cylinders.ts';
 
 export interface Failure {
   code: string;
@@ -489,6 +490,49 @@ const tankPidChecks: ScenarioCheck<TankPidState>[] = [
   },
 ];
 
+const cylindersChecks: ScenarioCheck<CylindersState>[] = [
+  {
+    id: 'sequence',
+    run(c) {
+      c.press('B_START');
+      c.waitUntil(() => c.state.cycles === 1, 10_000, 'cycleNotCompleted');
+      c.expect(c.state.lastCycleOk === true, 'wrongSequence');
+    },
+  },
+  {
+    id: 'singleCycle',
+    run(c) {
+      c.press('B_START');
+      c.waitUntil(() => c.state.cycles === 1, 10_000, 'cycleNotCompleted');
+      c.always(() => c.state.a.pos === 0 && c.state.b.pos === 0, 'restartedAlone');
+      c.wait(8000);
+    },
+  },
+  {
+    id: 'startDuringCycle',
+    run(c) {
+      c.press('B_START');
+      c.wait(1500);
+      c.press('B_START'); // pressed again in the middle of the cycle
+      c.waitUntil(() => c.state.cycles >= 1, 10_000, 'cycleNotCompleted');
+      c.wait(6000);
+      c.expect(c.state.wrongCycles === 0, 'wrongSequence');
+      c.expect(c.state.cycles === 1, 'extraCycle');
+    },
+  },
+  {
+    id: 'twoCycles',
+    run(c) {
+      c.press('B_START');
+      c.waitUntil(() => c.state.cycles === 1, 10_000, 'cycleNotCompleted');
+      c.wait(500);
+      c.press('B_START');
+      c.waitUntil(() => c.state.cycles === 2, 10_000, 'cycleNotCompleted');
+      c.expect(c.state.wrongCycles === 0, 'wrongSequence');
+    },
+  },
+];
+
 export const SCENARIO_CHECKS: Record<string, ScenarioCheck[]> = {
   motor: motorChecks,
   starDelta: starDeltaChecks,
@@ -496,4 +540,5 @@ export const SCENARIO_CHECKS: Record<string, ScenarioCheck[]> = {
   conveyor: conveyorChecks,
   tank: tankChecks,
   tankPid: tankPidChecks,
+  cylinders: cylindersChecks,
 };

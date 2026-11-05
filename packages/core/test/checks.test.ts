@@ -86,6 +86,14 @@ describe('broken solutions fail the right check', () => {
     expect(failures(p, 'tank')).toContain('noOverflow:overflow');
   });
 
+  it('cylinders: B retracting too early breaks the A+ B+ A- B- order', () => {
+    const p = scenarioProject('cylinders');
+    // Y_B only in step 2 (instead of steps 2 and 3): B returns together with A.
+    const rungs = p.programs[0]!.rungs;
+    rungs[rungs.length - 1] = rung([no('M_S2'), coil('Y_B')]);
+    expect(failures(p, 'cylinders')).toContain('sequence:wrongSequence');
+  });
+
   it('PID without integral action leaves a steady-state offset', () => {
     const p = scenarioProject('tankPid');
     const pid = p.programs[0]!.rungs[1]!.body[1] as { operands: string[] };

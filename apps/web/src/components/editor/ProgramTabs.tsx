@@ -50,11 +50,17 @@ export function ProgramTabs() {
             aria-selected={p.id === current.id}
             className={`program-tab${p.id === current.id ? ' active' : ''}${sub ? ' sub' : ''}`}
             onClick={() => a.setProgram(p.id)}
-            onDoubleClick={() => !readOnly && setRenaming(p.id)}
-            title={sub ? t('programs.subHint', { n: countCalls(programs, p.name) }) : t('programs.mainHint')}
+            onDoubleClick={() => !readOnly && !p.generatedBy && setRenaming(p.id)}
+            title={
+              p.generatedBy
+                ? t('programs.grafcetHint')
+                : sub
+                  ? t('programs.subHint', { n: countCalls(programs, p.name) })
+                  : t('programs.mainHint')
+            }
             data-testid={`program-tab-${p.name}`}
           >
-            <span className="program-kind">{sub ? 'ƒ' : '▶'}</span> {p.name}
+            <span className="program-kind">{p.generatedBy ? '⧉' : sub ? 'ƒ' : '▶'}</span> {p.name}
           </button>
         );
       })}
@@ -70,14 +76,23 @@ export function ProgramTabs() {
           <button className="program-add" onClick={() => a.addProgram('main', t('programs.newMainName'))}>
             ＋ ▶ {t('programs.newMain')}
           </button>
+          <button className="program-add" onClick={() => a.addGrafcet('GRAFCET')} data-testid="add-grafcet">
+            ＋ ⧉ GRAFCET
+          </button>
           <span className="grow" />
           <span className="program-actions">
-            <button className="icon" title={t('programs.rename')} onClick={() => setRenaming(current.id)}>
+            <button
+              className="icon"
+              title={t('programs.rename')}
+              disabled={!!current.generatedBy}
+              onClick={() => setRenaming(current.id)}
+            >
               ✎
             </button>
             <button
               className="icon"
               title={isSub ? t('programs.makeMain') : t('programs.makeSub')}
+              disabled={!!current.generatedBy}
               onClick={() => a.setProgramKind(current.id, isSub ? 'main' : 'sub')}
               data-testid="toggle-program-kind"
             >

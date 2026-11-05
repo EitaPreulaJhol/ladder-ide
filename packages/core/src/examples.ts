@@ -4,6 +4,7 @@ import { createProject } from './project.ts';
 import { coil, el, nc, no, par, program, reset, rung, tag } from './build.ts';
 import { applyScenario, SCENARIOS } from './scenarios/index.ts';
 import { findFreeChannel } from './hardware.ts';
+import { createGrafcet, syncGrafcet } from './grafcet.ts';
 import { newId } from './ids.ts';
 
 export interface ExampleDef {
@@ -160,6 +161,34 @@ export const EXAMPLES: ExampleDef[] = [
         widget('lamp', 'H_AUTO', 'Automático', '#16a34a'),
         widget('lamp', 'H_ALARME', 'Alarme', '#dc2626'),
       ];
+      return p;
+    },
+  },
+  {
+    id: 'grafcetCylinders',
+    build() {
+      const p = createProject('Exemplo: GRAFCET dos cilindros A+ B+ A- B-');
+      applyScenario(p, 'cylinders', false);
+      const g = createGrafcet(p, 'Cilindros');
+      g.name = 'Sequência A+ B+ A- B-';
+      g.steps = [
+        { id: newId('s_'), actions: [], comment: 'Repouso' },
+        { id: newId('s_'), actions: ['Y_A'], comment: 'A avança' },
+        { id: newId('s_'), actions: ['Y_A', 'Y_B'], comment: 'B avança' },
+        { id: newId('s_'), actions: ['Y_B'], comment: 'A recua' },
+        { id: newId('s_'), actions: [], comment: 'B recua' },
+      ];
+      g.transitions = [
+        { id: newId('t_'), condition: 'B_START & A0 & B0' },
+        { id: newId('t_'), condition: 'A1' },
+        { id: newId('t_'), condition: 'B1' },
+        { id: newId('t_'), condition: 'A0' },
+        { id: newId('t_'), condition: 'B0' },
+      ];
+      // The GRAFCET replaces the empty default program and the step memories of the ladder solution.
+      p.programs = p.programs.filter((x) => x.id === g.programId);
+      p.tags = p.tags.filter((t) => !/^M_S\d$/.test(t.name));
+      syncGrafcet(p, g.id);
       return p;
     },
   },

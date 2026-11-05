@@ -6,6 +6,7 @@ import { channelType, isInputTag, tagAddress } from './hardware.ts';
 import { forEachElement } from './edit.ts';
 import { familyCpu, getFamily } from './families.ts';
 import { getDialect } from './dialects.ts';
+import { validateGrafcets } from './grafcet.ts';
 
 export interface Diagnostic {
   severity: 'error' | 'warning';
@@ -145,6 +146,7 @@ export function validateProject(project: Project): Diagnostic[] {
   }
 
   checkProgramFlow(project, out);
+  out.push(...validateGrafcets(project));
 
   for (const [name, n] of coilUses)
     if (n > 1)

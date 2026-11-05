@@ -212,7 +212,13 @@
     "unknownProgram": "Chamada para o programa “{{name}}”, que não existe",
     "recursiveCall": "O programa “{{name}}” chama a si mesmo",
     "callCycle": "Chamadas em ciclo: {{cycle}}",
-    "subNeverCalled": "A sub-rotina “{{name}}” nunca é chamada (CALL)"
+    "subNeverCalled": "A sub-rotina “{{name}}” nunca é chamada (CALL)",
+    "grafcet_empty": "GRAFCET “{{grafcet}}”: a transição {{transition}} não tem condição",
+    "grafcet_invalidTerm": "GRAFCET “{{grafcet}}”: termo inválido “{{term}}” na transição {{transition}}",
+    "grafcet_multipleTimes": "GRAFCET “{{grafcet}}”: use no máximo um tempo (T#) por transição ({{transition}})",
+    "grafcet_negatedTime": "GRAFCET “{{grafcet}}”: tempo não pode ser negado (transição {{transition}})",
+    "grafcetActionType": "GRAFCET “{{grafcet}}”: a ação “{{name}}” da etapa {{step}} precisa ser BOOL",
+    "grafcetLoop": "GRAFCET “{{grafcet}}”: a etapa de retorno não existe"
   },
   "tags": {
     "title": "Tabela de tags",
@@ -375,6 +381,19 @@
       "valve": "válvula {{p}}%",
       "setpoint": "Setpoint",
       "auto": "Automático (PID_ON)"
+    },
+    "cylinders": {
+      "title": "Cilindros pneumáticos A+ B+ A− B−",
+      "summary": "Sequência eletropneumática com fins de curso (método de etapas ou GRAFCET).",
+      "task": "A cada toque em B_START (com os dois cilindros recuados: A0 e B0), execute uma vez a sequência A+ B+ A− B−: avance A (Y_A) até A1, avance B (Y_B) até B1, recue A até A0 e recue B até B0. As válvulas são 5/2 de simples solenoide com retorno por mola: a saída precisa ficar ligada enquanto o cilindro deve permanecer avançado. Apertar B_START no meio do ciclo não pode atrapalhar.",
+      "cylA": "Cilindro A",
+      "cylB": "Cilindro B",
+      "cycles": "Ciclos: {{n}}",
+      "wrong": "Ciclos fora de ordem: {{n}}",
+      "idle": "Aguardando partida",
+      "lastWrong": "O último ciclo não seguiu a ordem A+ B+ A− B−.",
+      "start": "PARTIDA",
+      "reset": "Zerar contagem"
     }
   },
   "projects": {
@@ -400,7 +419,8 @@
       "sealIn": "Selo liga/desliga — o primeiro circuito de todo eletricista",
       "blinker": "Pisca-pisca com dois temporizadores",
       "counter": "Contador de peças com lote e reset",
-      "subroutines": "Sub-rotinas (CALL) e saltos (JMP/LBL)"
+      "subroutines": "Sub-rotinas (CALL) e saltos (JMP/LBL)",
+      "grafcetCylinders": "GRAFCET: cilindros A+ B+ A− B− (gera o ladder automaticamente)"
     }
   },
   "widgets": {
@@ -473,6 +493,12 @@
       "followSetpoint": "Acompanha a mudança de setpoint para 70% sem sobressinal exagerado",
       "disturbance": "Volta ao setpoint depois de dobrar o consumo",
       "scaling": "Escalas de entrada (nível %) e de saída (válvula) corretas"
+    },
+    "cylinders": {
+      "sequence": "Executa a sequência A+ B+ A− B− na ordem certa",
+      "singleCycle": "Faz um único ciclo por partida (não repete sozinho)",
+      "startDuringCycle": "Ignorar B_START apertado no meio do ciclo",
+      "twoCycles": "Faz um novo ciclo a cada partida"
     }
   },
   "check": {
@@ -494,7 +520,11 @@
     "setpointNotReached": "O nível não chegou a {{sp}}% (±3%) no tempo esperado",
     "notStable": "O nível saiu da faixa de {{sp}}% ±4% depois de estabilizar",
     "overshoot": "Sobressinal acima de 82% ao subir para {{sp}}%",
-    "disturbanceNotRejected": "Depois da perturbação o nível ficou em {{level}}% (esperado 50% ±3%)"
+    "disturbanceNotRejected": "Depois da perturbação o nível ficou em {{level}}% (esperado 50% ±3%)",
+    "cycleNotCompleted": "O ciclo não terminou com os dois cilindros recuados no tempo esperado",
+    "wrongSequence": "Os fins de curso não chegaram na ordem A1 → B1 → A0 → B0",
+    "restartedAlone": "Um cilindro se moveu sem nova partida",
+    "extraCycle": "Foi feito mais de um ciclo para uma partida"
   },
   "xref": {
     "summary": "Referências: {{reads}} leitura(s) · {{writes}} escrita(s)",
@@ -593,7 +623,8 @@
     "delete": "Excluir programa",
     "deleteConfirm": "Excluir o programa “{{name}}”?",
     "deleteCalled": "O programa “{{name}}” é chamado {{n}} vez(es). Excluir mesmo assim? As chamadas ficarão inválidas.",
-    "nameTaken": "Já existe um programa com esse nome."
+    "nameTaken": "Já existe um programa com esse nome.",
+    "grafcetHint": "Programa gerado a partir de um GRAFCET: edite o GRAFCET; o ladder é atualizado automaticamente."
   },
   "report": {
     "open": "Denunciar",
@@ -635,5 +666,23 @@
     "tags": "Tags e referência cruzada",
     "usedIn": "Usada em",
     "xrefLegend": "Rn = rung onde a tag aparece; * = escrita (bobina, destino, temporizador/contador)."
+  },
+  "grafcet": {
+    "view": "GRAFCET",
+    "generatedLadder": "Ladder gerado",
+    "readOnlyNote": "Somente leitura: o ladder é regenerado a cada alteração do GRAFCET.",
+    "name": "Nome",
+    "prefix": "Tags geradas: {{prefix}}X0… (etapas), {{prefix}}T0… (tempos)",
+    "help": "Condições: & (E), | (OU), ! (NÃO), T#2s (tempo na etapa), 1 (sempre verdadeira).",
+    "step": "Etapa {{n}}",
+    "stepActive": "Etapa {{n}} (ativa)",
+    "actions": "Ações da etapa {{n}}",
+    "actionsPlaceholder": "ações: saídas ligadas nesta etapa (ex.: Y_A, Y_B)",
+    "comment": "descrição",
+    "addStep": "Etapa abaixo",
+    "removeStep": "Remover a etapa {{n}}",
+    "condition": "Condição da transição {{from}} → {{to}}",
+    "conditionPlaceholder": "condição (ex.: A1 & !B1)",
+    "loopTo": "Depois da última transição, volta para a"
   }
 }

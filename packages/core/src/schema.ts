@@ -42,7 +42,26 @@ const NodeSchema: z.ZodType<LadderNode> = z.lazy(() =>
 
 const RungSchema = z.object({ id, comment: text(2000).optional(), body: z.array(NodeSchema).max(256) });
 
-const ProgramSchema = z.object({ id, name: text(100), rungs: z.array(RungSchema).max(2000) });
+const GrafcetSchema = z.object({
+  id,
+  name: text(100),
+  prefix: z.string().regex(/^[A-Za-z_][A-Za-z0-9_]{0,20}$/),
+  steps: z
+    .array(z.object({ id, actions: z.array(text(64)).max(32), comment: text(500).optional() }))
+    .min(2)
+    .max(100),
+  transitions: z.array(z.object({ id, condition: text(500) })).max(100),
+  loopTo: z.number().int().min(0).max(99),
+  programId: id,
+});
+
+const ProgramSchema = z.object({
+  id,
+  name: text(100),
+  rungs: z.array(RungSchema).max(2000),
+  kind: z.enum(['main', 'sub']).optional(),
+  generatedBy: text(64).optional(),
+});
 
 const ModuleSchema = z.object({
   id,
@@ -88,6 +107,7 @@ export const ProjectSchema = z.object({
   scenarioId: text(64).optional(),
   sim: z.object({ scanTimeMs: z.number().min(1).max(1000) }),
   trend: z.array(text(80)).max(32).optional(),
+  grafcets: z.array(GrafcetSchema).max(20).optional(),
 });
 
 const MAX_DEPTH = 40;

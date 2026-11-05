@@ -30,6 +30,15 @@ describe('schema', () => {
     expect(parseProject({ ...createProject(), schemaVersion: 99 }).ok).toBe(false);
   });
 
+  it('round-trips every example without losing fields (save / load / share)', () => {
+    for (const ex of EXAMPLES) {
+      const original = JSON.parse(JSON.stringify(ex.build()));
+      const r = parseProject(original);
+      expect(r.ok, ex.id).toBe(true);
+      if (r.ok) expect(r.project, ex.id).toEqual(original);
+    }
+  });
+
   it('rejects deeply nested input', () => {
     let node: unknown = { kind: 'el', id: 'x', instr: 'NO', operands: ['A'] };
     for (let i = 0; i < 100; i++) node = { kind: 'par', id: 'p' + i, branches: [[node]] };

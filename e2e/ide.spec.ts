@@ -321,3 +321,24 @@ test('PID level control passes the automatic checks', async ({ page }) => {
   await page.getByTestId('run-checks').click();
   await expect(page.getByTestId('checks-score')).toHaveText(/4 de 4/, { timeout: 10_000 });
 });
+
+test('share with expiration and report a shared link', async ({ page }) => {
+  const cspErrors: string[] = [];
+  page.on(
+    'console',
+    (m) => m.type() === 'error' && /Content Security Policy/i.test(m.text()) && cspErrors.push(m.text()),
+  );
+  await page.goto('/');
+  await page.getByTestId('share').click();
+  await page.getByTestId('share-expiration').selectOption('7');
+  await page.getByTestId('create-share').click();
+  await expect(page.getByText('O link expira em')).toBeVisible();
+  const url = await page.getByTestId('share-url').inputValue();
+
+  await page.goto(url);
+  await page.getByTestId('report').click();
+  await page.getByLabel('Conteúdo ofensivo').check();
+  await page.getByTestId('report-send').click();
+  await expect(page.getByTestId('report-done')).toBeVisible();
+  expect(cspErrors).toEqual([]);
+});

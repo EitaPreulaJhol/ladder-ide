@@ -21,6 +21,11 @@ services:
     environment:
       DATABASE_URL: postgres://ladder:${POSTGRES_PASSWORD:-ladder}@db:5432/ladder
       TRUST_PROXY: ${TRUST_PROXY:-0}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      HASH_SALT: ${HASH_SALT:-}
+      STORAGE_LIMIT_MB: ${STORAGE_LIMIT_MB:-512}
+      REPORT_HIDE_THRESHOLD: ${REPORT_HIDE_THRESHOLD:-3}
+      HSTS: ${HSTS:-0}
     ports:
       - '${APP_PORT:-3000}:3000'
     depends_on:

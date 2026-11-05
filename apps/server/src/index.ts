@@ -16,7 +16,31 @@ if (process.env.DATABASE_URL) {
   store = new MemoryShareStore();
 }
 
-const app = await buildApp({ store, staticDir, logger: true, trustProxy: process.env.TRUST_PROXY === '1' });
+const adminToken = process.env.ADMIN_TOKEN || undefined;
+if (adminToken && adminToken.length < 24)
+  console.warn(
+    '[ladder] ADMIN_TOKEN curto demais (use 24+ caracteres aleatórios): rotas de administração desativadas.',
+  );
+if (!process.env.HASH_SALT)
+  console.warn(
+    '[ladder] HASH_SALT não definido: denúncias de uma mesma pessoa só são agrupadas até o servidor reiniciar.',
+  );
+
+const app = await buildApp({
+  store,
+  staticDir,
+  logger: true,
+  trustProxy: process.env.TRUST_PROXY === '1',
+  adminToken: adminToken && adminToken.length >= 24 ? adminToken : undefined,
+  hashSalt: process.env.HASH_SALT || undefined,
+  storageLimitBytes: process.env.STORAGE_LIMIT_MB
+    ? Number(process.env.STORAGE_LIMIT_MB) * 1024 * 1024
+    : undefined,
+  reportHideThreshold: process.env.REPORT_HIDE_THRESHOLD
+    ? Number(process.env.REPORT_HIDE_THRESHOLD)
+    : undefined,
+  hsts: process.env.HSTS === '1',
+});
 
 const shutdown = async () => {
   await app.close();

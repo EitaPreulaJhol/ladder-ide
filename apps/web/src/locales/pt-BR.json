@@ -38,7 +38,9 @@
     "loading": "Carregando projeto compartilhado…",
     "notFound": "Link de compartilhamento não encontrado.",
     "error": "Não foi possível carregar o projeto: {{error}}",
-    "backHome": "Voltar ao início"
+    "backHome": "Voltar ao início",
+    "expired": "Este link de compartilhamento expirou.",
+    "hidden": "Este link foi denunciado e está em análise pela administração."
   },
   "share": {
     "title": "Compartilhar projeto",
@@ -48,7 +50,14 @@
     "copy": "Copiar",
     "copied": "Copiado!",
     "error": "Falha ao compartilhar: {{error}}",
-    "close": "Fechar"
+    "close": "Fechar",
+    "expiration": "Validade do link",
+    "never": "Sem prazo",
+    "days_one": "{{count}} dia",
+    "days_other": "{{count}} dias",
+    "expiresOn": "O link expira em {{date}}.",
+    "neverExpires": "O link não expira.",
+    "policy": "Links públicos com conteúdo abusivo podem ser denunciados e removidos. Não compartilhe dados pessoais."
   },
   "editor": {
     "palette": "Instruções",
@@ -584,5 +593,21 @@
     "deleteConfirm": "Excluir o programa “{{name}}”?",
     "deleteCalled": "O programa “{{name}}” é chamado {{n}} vez(es). Excluir mesmo assim? As chamadas ficarão inválidas.",
     "nameTaken": "Já existe um programa com esse nome."
+  },
+  "report": {
+    "open": "Denunciar",
+    "title": "Denunciar este link",
+    "explain": "Use para spam, conteúdo ofensivo ou dados pessoais expostos. Com várias denúncias o link fica oculto até a análise da administração. Não guardamos seu IP, apenas um código anônimo para evitar denúncias repetidas.",
+    "reason": "Motivo",
+    "reasons": {
+      "spam": "Spam ou propaganda",
+      "offensive": "Conteúdo ofensivo",
+      "personalData": "Dados pessoais expostos",
+      "other": "Outro motivo"
+    },
+    "details": "Detalhes (opcional)",
+    "send": "Enviar denúncia",
+    "thanks": "Obrigado. A denúncia foi registrada.",
+    "error": "Não foi possível enviar: {{error}}"
   }
 }

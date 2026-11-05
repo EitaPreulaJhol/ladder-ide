@@ -4,6 +4,7 @@ import { useProject, type View } from './store/project.ts';
 import { useSim } from './store/sim.ts';
 import { useUi } from './store/ui.ts';
 import { TopBar } from './components/TopBar.tsx';
+import { ReportDialog } from './components/ReportDialog.tsx';
 import { LadderEditor, useEditorShortcuts } from './components/editor/LadderEditor.tsx';
 import { Properties } from './components/editor/Properties.tsx';
 import { BottomPanel } from './components/BottomPanel.tsx';
@@ -27,6 +28,7 @@ export function App() {
     status: 'loading',
   });
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [reporting, setReporting] = useState(false);
   const loaded = useProject((s) => s.project !== null);
   const view = useProject((s) => s.view);
   const sharedId = useProject((s) => s.sharedId);
@@ -72,7 +74,11 @@ export function App() {
   if (boot.status === 'error')
     return (
       <div className="boot">
-        <p>{boot.error === 'notFound' ? t('shared.notFound') : t('shared.error', { error: boot.error })}</p>
+        <p>
+          {boot.error === 'notFound' || boot.error === 'expired' || boot.error === 'hidden'
+            ? t(`shared.${boot.error}`)
+            : t('shared.error', { error: boot.error })}
+        </p>
         <a href="/">{t('shared.backHome')}</a>
       </div>
     );
@@ -87,6 +93,10 @@ export function App() {
           <button className="primary" onClick={() => void forkShared()} data-testid="fork">
             {t('shared.fork')}
           </button>
+          <button className="link" onClick={() => setReporting(true)} data-testid="report">
+            {t('report.open')}
+          </button>
+          {reporting && <ReportDialog shareId={sharedId} onClose={() => setReporting(false)} />}
         </div>
       )}
       <div className="workspace">

@@ -1921,3 +1921,15 @@ table.grid tr.unused td {
 .program-rename {
   width: 160px;
 }
+
+.report-reasons {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.shared-banner .link {
+  margin-left: auto;
+}

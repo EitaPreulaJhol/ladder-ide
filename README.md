@@ -57,6 +57,22 @@ POSTGRES_PASSWORD=troque-me docker compose up -d --build
 
 Atrás de um proxy reverso, defina `TRUST_PROXY=1` para o limite de requisições usar o IP real do cliente.
 
+## Proteção e administração
+
+- **Denúncias:** quem abre um link compartilhado pode denunciá-lo. Com `REPORT_HIDE_THRESHOLD` denúncias de pessoas diferentes (padrão 3), o link fica oculto até a revisão. Nenhum IP é guardado: só um hash com o segredo `HASH_SALT`.
+- **Validade opcional** (1, 7, 30 ou 90 dias) escolhida ao compartilhar; links vencidos são apagados a cada hora.
+- **Limite total** de armazenamento dos links (`STORAGE_LIMIT_MB`, padrão 512).
+- **Cabeçalhos de segurança:** Content-Security-Policy restrita à própria origem, `X-Frame-Options: DENY`, `Permissions-Policy` e, com `HSTS=1`, `Strict-Transport-Security`.
+- **Administração:** defina `ADMIN_TOKEN` (24+ caracteres aleatórios). Sem ele, as rotas de administração não existem.
+
+```bash
+TOKEN=...   # o mesmo ADMIN_TOKEN do servidor
+curl -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/reports            # links denunciados
+curl -X POST -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/shares/ID/restore  # libera (zera denúncias)
+curl -X POST -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/shares/ID/hide     # oculta
+curl -X DELETE -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/shares/ID        # remove
+```
+
 ## API
 
 | Método | Rota              | Descrição                                                                                        |

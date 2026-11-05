@@ -20,3 +20,5 @@ export * from './scenarios/checks.ts';
 export * from './xref.ts';
 export * from './faults.ts';
 export * from './grafcet.ts';
+export * from './xml.ts';
+export * from './plcopen.ts';

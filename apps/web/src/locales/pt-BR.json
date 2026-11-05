@@ -419,7 +419,7 @@
     "title": "Projetos",
     "local": "Meus projetos (salvos neste navegador)",
     "new": "Novo projeto",
-    "import": "Importar arquivo…",
+    "import": "Importar arquivo (.json ou PLCopen .xml)…",
     "open": "Abrir",
     "delete": "Excluir",
     "deleteConfirm": "Excluir o projeto “{{name}}” deste navegador? Esta ação não pode ser desfeita.",
@@ -442,7 +442,10 @@
       "grafcetCylinders": "GRAFCET: cilindros A+ B+ A− B− (gera o ladder automaticamente)"
     },
     "language": "Idioma da interface",
-    "contentNote": "Os projetos de exemplo (nomes, comentários e descrições de tags) estão em português."
+    "contentNote": "Os projetos de exemplo (nomes, comentários e descrições de tags) estão em português.",
+    "exportPlcopen": "Exportar PLCopen XML",
+    "exportPlcopenHint": "Formato de intercâmbio IEC 61131-3 (CODESYS, OpenPLC, Beremiz). Hardware e GRAFCET não são incluídos.",
+    "importWarnings": "Importação concluída com {{n}} aviso(s):"
   },
   "widgets": {
     "on": "LIGADO",

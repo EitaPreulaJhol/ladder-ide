@@ -437,3 +437,23 @@ test('interface language: English and Spanish, remembered across reloads', async
   await page.getByTestId('language').selectOption('pt-BR');
   await expect(page.getByTestId('run')).toContainText('Executar');
 });
+
+test('PLCopen XML: export from the UI and import it back', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-scenario:starDelta').click();
+  await page.getByTestId('nav-projects').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('export-plcopen').click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/\.plcopen\.xml$/);
+  const file = testInfo.outputPath('star.xml');
+  await download.saveAs(file);
+
+  await page.locator('input[type=file]').setInputFiles(file);
+  await expect(page.getByTestId('nav-editor')).toHaveClass(/active/);
+  await expect(page.getByTestId('el-TON-T_STAR')).toBeVisible();
+  await expect(page.getByTestId('el-COIL-K3_DELTA')).toBeVisible();
+  await expect(page.getByTestId('problems-tab')).toHaveText(/\(0\)/);
+});

@@ -18,6 +18,8 @@ Ambiente web aberto (sem login) para **treinar, testar e planejar** programas La
 - **Funciona offline e pode ser instalado** (PWA): depois da primeira visita, editor, simulação e projetos salvos funcionam sem internet.
 - **Documentação do projeto** pronta para imprimir ou salvar em PDF: capa, programas, tags com referência cruzada e lista de I/O.
 - **Tema claro/escuro** — botão na barra superior alterna entre automático (segue o sistema), claro e escuro; a escolha fica salva no navegador.
+- **PLCopen XML (IEC 61131-3 TC6)** — exporta e importa programas em Ladder para intercâmbio com CODESYS, OpenPLC/Beremiz e outras IDEs IEC.
+- **Interface em português, inglês e espanhol.**
 - **Projetos** salvos no navegador (IndexedDB) + exportar/importar `.ladder.json`; **links compartilháveis** imutáveis (snapshot) que qualquer pessoa pode abrir, simular e copiar (fork).
 
 ## Estrutura

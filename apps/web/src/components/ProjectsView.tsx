@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { locale } from '../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import {
   createProject,
@@ -10,11 +9,21 @@ import {
   getDialect,
   parseProject,
   type Project,
+  exportPlcopen,
+  importPlcopen,
 } from '@ladder/core';
 import { useProject } from '../store/project.ts';
-import { deleteProject, listProjects, loadProject, saveProject, type StoredProject } from '../storage/db.ts';
+import {
+  deleteProject,
+  downloadText,
+  listProjects,
+  loadProject,
+  safeFileName,
+  saveProject,
+  type StoredProject,
+} from '../storage/db.ts';
 import { openProject } from '../session.ts';
-import { LANGUAGES, setLanguage, type Language } from '../i18n.ts';
+import { LANGUAGES, locale, setLanguage, type Language } from '../i18n.ts';
 
 export function ProjectsView() {
   const { t, i18n } = useTranslation();
@@ -23,6 +32,7 @@ export function ProjectsView() {
   const update = useProject((s) => s.update);
   const [list, setList] = useState<StoredProject[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const refresh = () => void listProjects().then(setList);
@@ -36,9 +46,18 @@ export function ProjectsView() {
 
   const onImport = async (file: File) => {
     try {
-      const r = parseProject(JSON.parse(await file.text()));
-      if (!r.ok) throw new Error(r.error);
-      await open(forkProject(r.project));
+      const text = await file.text();
+      setImportWarnings([]);
+      if (text.trimStart().startsWith('<')) {
+        // PLCopen XML (TC6) from another IEC 61131-3 tool.
+        const { project: imported, warnings } = importPlcopen(text);
+        await open(imported);
+        setImportWarnings(warnings);
+      } else {
+        const r = parseProject(JSON.parse(text));
+        if (!r.ok) throw new Error(r.error);
+        await open(forkProject(r.project));
+      }
       setError(null);
     } catch (e) {
       setError(t('projects.importError', { error: (e as Error).message }));
@@ -124,16 +143,39 @@ export function ProjectsView() {
             ＋ {t('projects.new')}
           </button>
           <button onClick={() => fileRef.current?.click()}>{t('projects.import')}</button>
+          <button
+            onClick={() =>
+              downloadText(
+                `${safeFileName(project.meta.name)}.plcopen.xml`,
+                exportPlcopen(project),
+                'application/xml',
+              )
+            }
+            title={t('projects.exportPlcopenHint')}
+            data-testid="export-plcopen"
+          >
+            {t('projects.exportPlcopen')}
+          </button>
           <input
             ref={fileRef}
             type="file"
-            accept=".json,application/json"
+            accept=".json,.xml,application/json,text/xml,application/xml"
             hidden
             onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])}
           />
         </div>
         <p className="muted small">{t('projects.privacy')}</p>
         {error && <p className="error-text">{error}</p>}
+        {importWarnings.length > 0 && (
+          <div className="notice warn" data-testid="import-warnings">
+            <strong>{t('projects.importWarnings', { n: importWarnings.length })}</strong>
+            <ul>
+              {importWarnings.slice(0, 30).map((w, i) => (
+                <li key={i}>{w}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {list.length === 0 && <p className="muted">{t('projects.empty')}</p>}
         <ul className="project-list">
           {list.map((p) => (

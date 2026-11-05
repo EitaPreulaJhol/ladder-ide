@@ -419,7 +419,7 @@
     "title": "Projects",
     "local": "My projects (saved in this browser)",
     "new": "New project",
-    "import": "Import file…",
+    "import": "Import file (.json or PLCopen .xml)…",
     "open": "Open",
     "delete": "Delete",
     "deleteConfirm": "Delete the project “{{name}}” from this browser? This cannot be undone.",
@@ -442,7 +442,10 @@
       "subroutines": "Subroutines (CALL) and jumps (JMP/LBL)",
       "grafcetCylinders": "GRAFCET: cylinders A+ B+ A− B− (generates the ladder automatically)"
     },
-    "contentNote": "Example projects (names, comments and tag descriptions) are written in Portuguese."
+    "contentNote": "Example projects (names, comments and tag descriptions) are written in Portuguese.",
+    "exportPlcopen": "Export PLCopen XML",
+    "exportPlcopenHint": "IEC 61131-3 exchange format (CODESYS, OpenPLC, Beremiz). Hardware and GRAFCET are not included.",
+    "importWarnings": "Import finished with {{n}} warning(s):"
   },
   "widgets": {
     "on": "ON",

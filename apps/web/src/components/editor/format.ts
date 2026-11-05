@@ -1,6 +1,7 @@
 import {
   getDialect,
   parseOperand,
+  readOperandValue,
   tagAddress,
   type Element,
   type Project,
@@ -39,28 +40,16 @@ export function addressOf(project: Project, operand: string | undefined): string
 }
 
 /** Live value of an operand (tag, member or literal) from a snapshot. */
+/** Live value of an operand (tag, member, word bit or literal) from a snapshot. */
 export function liveValue(
   values: Record<string, Value> | undefined,
   operand: string | undefined,
 ): number | boolean | undefined {
-  const p = parseOperand(operand);
-  if (p.kind === 'literal') return p.value;
-  if (p.kind !== 'tag' || !values) return undefined;
-  const v = values[p.name];
-  if (v === undefined) return undefined;
-  if (typeof v !== 'object') return v;
-  if (!p.member) return undefined;
-  const map: Record<string, number | boolean | undefined> = {
-    DN: v.dn,
-    ACC: v.acc,
-    PRE: v.pre,
-    EN: 'en' in v ? v.en : undefined,
-    TT: 'tt' in v ? v.tt : undefined,
-    CU: 'cu' in v ? v.cu : undefined,
-    CD: 'cd' in v ? v.cd : undefined,
-    QD: 'qd' in v ? v.qd : undefined,
-  };
-  return map[p.member];
+  if (!values) {
+    const p = parseOperand(operand);
+    return p.kind === 'literal' ? p.value : undefined;
+  }
+  return readOperandValue(values, operand);
 }
 
 export function formatValue(v: Value | undefined): string {

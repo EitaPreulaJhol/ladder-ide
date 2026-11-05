@@ -175,7 +175,8 @@ const s71200: PlcFamily = {
       description: 'Saídas analógicas',
     },
   ],
-  unsupported: [],
+  // No AB-style bit shift register: S7-1200 uses SHL/SHR on words.
+  unsupported: ['BSL', 'BSR'],
   channelAddress(m, ch) {
     const area = isInput(m.kind) ? 'I' : 'Q';
     if (m.embedded) {
@@ -301,7 +302,7 @@ const micrologix: PlcFamily = {
     },
   ],
   // RSLogix 500 has no pulse timer, up/down counter in one instruction or negated coil.
-  unsupported: ['TP', 'CTUD', 'NCOIL', 'SR', 'RS'],
+  unsupported: ['TP', 'CTUD', 'NCOIL', 'SR', 'RS', 'SHL', 'SHR', 'NORM_X', 'SCALE_X'],
   channelAddress(m, ch, position) {
     const p = isInput(m.kind) ? 'I' : 'O';
     if (m.embedded) return isAnalog(m.kind) ? `${p}:0.${4 + ch}` : `${p}:0/${ch}`;

@@ -87,7 +87,15 @@ export type InstructionId =
   | 'CALL'
   // analog
   | 'SCALE'
-  | 'PID';
+  | 'PID'
+  // shift
+  | 'BSL'
+  | 'BSR'
+  | 'SHL'
+  | 'SHR'
+  // Siemens-style analog
+  | 'NORM_X'
+  | 'SCALE_X';
 
 export interface Element {
   kind: 'el';

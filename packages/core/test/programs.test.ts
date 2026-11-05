@@ -185,3 +185,86 @@ describe('analog', () => {
     expect(sim.getValue('CV')).toBe(12.5);
   });
 });
+
+describe('word bits and shift instructions', () => {
+  it('contacts and coils on bits of an integer word (REG.n)', () => {
+    const p = project(
+      [tag('REG', 'INT'), tag('A', 'BOOL'), tag('Y', 'BOOL')],
+      [program('Main', [rung([no('A'), coil('REG.3')]), rung([no('REG.3'), coil('Y')])])],
+    );
+    const sim = new Simulator(p);
+    sim.setInput('A', true);
+    sim.scan(10);
+    expect(sim.getValue('REG')).toBe(8);
+    expect(sim.getValue('Y')).toBe(true);
+    expect(codes(p)).not.toContain('invalidBit');
+    const bad = project(
+      [tag('B', 'BOOL'), tag('Y', 'BOOL')],
+      [program('Main', [rung([no('B.2'), coil('Y')])])],
+    );
+    expect(codes(bad)).toContain('invalidBit');
+  });
+
+  it('BSL tracks parts along a conveyor, one shift per pulse', () => {
+    const p = project(
+      [tag('REG', 'INT'), tag('CLK', 'BOOL'), tag('PART', 'BOOL'), tag('AT3', 'BOOL')],
+      [program('Main', [rung([no('CLK'), el('BSL', 'REG', 'PART', '8')]), rung([no('REG.3'), coil('AT3')])])],
+    );
+    const sim = new Simulator(p);
+    const pulse = (part: boolean) => {
+      sim.setInput('PART', part);
+      sim.setInput('CLK', true);
+      sim.scan(10);
+      sim.setInput('CLK', false);
+      sim.scan(10);
+    };
+    pulse(true);
+    expect(sim.getValue('REG')).toBe(1);
+    sim.setInput('PART', false);
+    sim.setInput('CLK', true);
+    for (let i = 0; i < 5; i++) sim.scan(10); // clock held high: shifts only once
+    sim.setInput('CLK', false);
+    sim.scan(10);
+    expect(sim.getValue('REG')).toBe(2);
+    pulse(false);
+    pulse(false);
+    expect(sim.getValue('REG')).toBe(8);
+    expect(sim.getValue('AT3')).toBe(true);
+    for (let i = 0; i < 5; i++) pulse(false);
+    expect(sim.getValue('REG')).toBe(0); // shifted out of the 8-bit register
+  });
+
+  it('BSR, SHL, SHR, NORM_X and SCALE_X', () => {
+    const p = project(
+      [
+        tag('R', 'INT', { initial: 0 }),
+        tag('IN', 'BOOL', { initial: true }),
+        tag('CLK', 'BOOL'),
+        tag('X', 'INT', { initial: -32768 }),
+        tag('L', 'INT'),
+        tag('S', 'INT'),
+        tag('RAW', 'INT', { initial: 13824 }),
+        tag('N', 'REAL'),
+        tag('PCT', 'REAL'),
+      ],
+      [
+        program('Main', [
+          rung([no('CLK'), el('BSR', 'R', 'IN', '4')]),
+          rung([el('SHL', '3', '2', 'L')]),
+          rung([el('SHR', 'X', '15', 'S')]),
+          rung([el('NORM_X', '0', 'RAW', '27648', 'N')]),
+          rung([el('SCALE_X', '0', 'N', '100', 'PCT')]),
+        ]),
+      ],
+    );
+    const sim = new Simulator(p);
+    sim.setInput('CLK', true);
+    sim.scan(10);
+    expect(sim.getValue('R')).toBe(8); // bit enters at the top (bit 3)
+    expect(sim.getValue('L')).toBe(12);
+    expect(sim.getValue('S')).toBe(1); // logical shift of 0x8000
+    expect(sim.getValue('N')).toBe(0.5);
+    sim.scan(10);
+    expect(sim.getValue('PCT')).toBe(50);
+  });
+});

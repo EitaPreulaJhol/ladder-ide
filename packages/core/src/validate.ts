@@ -53,6 +53,10 @@ function checkOperand(
   const isStruct = t === 'TIMER' || t === 'COUNTER';
   const mismatch = (expected: string) => ({ code: 'typeMismatch', params: { name: text!.trim(), expected } });
   if (p.member && !isStruct) return { code: 'invalidMember', params: { name: p.name } };
+  if (p.bit !== undefined) {
+    if (t !== 'INT' && t !== 'DINT') return { code: 'invalidBit', params: { name: p.name } };
+    return kind === 'bit' || kind === 'bitDest' ? null : mismatch('INT/DINT/REAL');
+  }
   switch (kind) {
     case 'bitDest':
       if (p.member) return mismatch('BOOL');

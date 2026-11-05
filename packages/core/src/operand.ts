@@ -33,7 +33,7 @@ export const NUMERIC_MEMBERS: ReadonlySet<Member> = new Set(['ACC', 'PRE']);
 export type ParsedOperand =
   | { kind: 'empty' }
   | { kind: 'literal'; value: number }
-  | { kind: 'tag'; name: string; member?: Member }
+  | { kind: 'tag'; name: string; member?: Member; /** Bit of an INT/DINT word (`REG.3`). */ bit?: number }
   | { kind: 'invalid'; text: string };
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -113,6 +113,10 @@ export function parseOperand(text: string | undefined): ParsedOperand {
   if (dot < 0) return IDENT.test(s) ? { kind: 'tag', name: s } : { kind: 'invalid', text: s };
   const name = s.slice(0, dot);
   const memberText = s.slice(dot + 1).toUpperCase();
+  if (/^\d{1,2}$/.test(memberText)) {
+    const bit = Number(memberText);
+    return IDENT.test(name) && bit < 32 ? { kind: 'tag', name, bit } : { kind: 'invalid', text: s };
+  }
   const member = MEMBER_ALIASES[memberText];
   if (!IDENT.test(name) || !member) return { kind: 'invalid', text: s };
   return { kind: 'tag', name, member };

@@ -125,7 +125,13 @@
     "LBL": "Rótulo: destino de um salto (JMP). Deve ser o primeiro elemento do rung",
     "CALL": "Chama uma sub-rotina (outro programa) com a linha energizada; ela executa inteira e volta",
     "SCALE": "Escala linear: converte IN da faixa [mín, máx] de entrada para a faixa de saída (ex.: 0–27648 → 0–100%)",
-    "PID": "Controlador PID simplificado (saída 0–100%). Sem energia na linha fica em manual: não escreve a saída. Ti e Td em segundos (Ti = 0 desliga a integral)"
+    "PID": "Controlador PID simplificado (saída 0–100%). Sem energia na linha fica em manual: não escreve a saída. Ti e Td em segundos (Ti = 0 desliga a integral)",
+    "BSL": "Registrador de deslocamento à esquerda: a cada borda de subida da linha, desloca a palavra 1 bit e coloca o bit de entrada no bit 0 (rastreamento de peças)",
+    "BSR": "Registrador de deslocamento à direita: a cada borda de subida, desloca 1 bit para a direita e coloca o bit de entrada no bit mais alto",
+    "SHL": "Desloca a palavra N bits para a esquerda enquanto a linha estiver energizada",
+    "SHR": "Desloca a palavra N bits para a direita (lógico) enquanto a linha estiver energizada",
+    "NORM_X": "Normaliza VALUE da faixa [MIN, MAX] para 0,0–1,0 (estilo S7-1200)",
+    "SCALE_X": "Escala VALUE (0,0–1,0) para a faixa [MIN, MAX] (estilo S7-1200)"
   },
   "operand": {
     "bit": "Bit",
@@ -152,7 +158,14 @@
     "cv": "Saída (CV, %)",
     "kp": "Ganho Kp",
     "ti": "Tempo integral Ti (s)",
-    "td": "Tempo derivativo Td (s)"
+    "td": "Tempo derivativo Td (s)",
+    "word": "Palavra (INT/DINT)",
+    "inBit": "Bit de entrada",
+    "length": "Comprimento (bits)",
+    "count": "Quantidade de bits (N)",
+    "min": "Mínimo",
+    "value": "Valor",
+    "max": "Máximo"
   },
   "props": {
     "title": "Propriedades",
@@ -160,7 +173,7 @@
     "rungSelected": "Rung {{n}} selecionado. Use as setas da barra para reordenar ou Del para excluir.",
     "instruction": "Instrução",
     "operands": "Operandos",
-    "hintOperand": "Nome de tag, endereço (ex.: {{example}}), membro (T1.DN) ou literal (10, T#5s)",
+    "hintOperand": "Tag, endereço (ex.: {{example}}), membro (T1.DN), bit de palavra (REG.3) ou literal (10, T#5s)",
     "newTagCreated": "Tags desconhecidas são criadas automaticamente com o tipo esperado.",
     "live": "Valor ao vivo",
     "tagInfo": "{{type}} · {{address}}",
@@ -218,7 +231,8 @@
     "grafcet_multipleTimes": "GRAFCET “{{grafcet}}”: use no máximo um tempo (T#) por transição ({{transition}})",
     "grafcet_negatedTime": "GRAFCET “{{grafcet}}”: tempo não pode ser negado (transição {{transition}})",
     "grafcetActionType": "GRAFCET “{{grafcet}}”: a ação “{{name}}” da etapa {{step}} precisa ser BOOL",
-    "grafcetLoop": "GRAFCET “{{grafcet}}”: a etapa de retorno não existe"
+    "grafcetLoop": "GRAFCET “{{grafcet}}”: a etapa de retorno não existe",
+    "invalidBit": "“{{name}}” não é INT/DINT: acesso a bit (.n) só vale para palavras inteiras"
   },
   "tags": {
     "title": "Tabela de tags",

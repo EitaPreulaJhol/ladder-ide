@@ -172,6 +172,17 @@ export function Glyph({ el, project, power, values }: Props) {
       if (info.category === 'counter' && i === 2) label = 'CD';
       if (spec.label === 'source') label = d.id === 'ab' ? 'Src' : 'IN';
       if (spec.label === 'dest') label = d.id === 'ab' ? 'Dest' : 'OUT';
+      const short: Record<string, string> = {
+        word: 'WORD',
+        inBit: 'BIT',
+        length: 'LEN',
+        input: 'IN',
+        count: 'N',
+        min: 'MIN',
+        value: 'VAL',
+        max: 'MAX',
+      };
+      if (!label && short[spec.label]) label = short[spec.label]!;
       if (i === 0 && (info.category === 'timer' || info.category === 'counter')) return;
       let shown = displayOperand(text, project, spec.kind);
       const live = values ? liveValue(values, text) : undefined;

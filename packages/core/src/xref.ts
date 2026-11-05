@@ -86,6 +86,7 @@ export function readOperandValue(
   if (p.kind !== 'tag') return undefined;
   const v = values[p.name];
   if (v === undefined) return undefined;
+  if (p.bit !== undefined) return typeof v === 'number' ? ((Math.trunc(v) >>> p.bit) & 1) === 1 : undefined;
   if (typeof v !== 'object') return p.member ? undefined : v;
   if (!p.member) return undefined;
   const m: Record<string, number | boolean | undefined> = {

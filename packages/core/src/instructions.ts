@@ -209,6 +209,30 @@ const list: InstructionInfo[] = [
     isOutput: true,
     isBox: true,
   },
+
+  // Bit shift register (edge triggered): shifts `inBit` into `word`, `length` bits long.
+  ...(['BSL', 'BSR'] as const).map((id): InstructionInfo => ({
+    id,
+    category: 'math',
+    operands: [op('numberDest', 'word'), op('bit', 'inBit'), op('number', 'length')],
+    isOutput: true,
+    isBox: true,
+  })),
+  // Word shift (every scan while powered).
+  ...(['SHL', 'SHR'] as const).map((id): InstructionInfo => ({
+    id,
+    category: 'math',
+    operands: [op('number', 'input'), op('number', 'count'), op('numberDest', 'dest')],
+    isOutput: true,
+    isBox: true,
+  })),
+  ...(['NORM_X', 'SCALE_X'] as const).map((id): InstructionInfo => ({
+    id,
+    category: 'analog',
+    operands: [op('number', 'min'), op('number', 'value'), op('number', 'max'), op('numberDest', 'dest')],
+    isOutput: true,
+    isBox: true,
+  })),
 ];
 
 export const INSTRUCTIONS: Record<InstructionId, InstructionInfo> = Object.fromEntries(
@@ -251,6 +275,10 @@ export function defaultTypeForOperand(kind: OperandKind): DataType | null {
 export function defaultOperands(id: InstructionId): string[] {
   if (id === 'SCALE') return ['', '0', '27648', '0', '100', ''];
   if (id === 'PID') return ['', '', '', '1', '10', '0'];
+  if (id === 'BSL' || id === 'BSR') return ['', '', '16'];
+  if (id === 'SHL' || id === 'SHR') return ['', '1', ''];
+  if (id === 'NORM_X') return ['0', '', '27648', ''];
+  if (id === 'SCALE_X') return ['0', '', '100', ''];
   const info = INSTRUCTIONS[id];
   return info.operands.map((o) => {
     if (o.kind === 'label') return 'L1';

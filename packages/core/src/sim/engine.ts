@@ -493,6 +493,45 @@ export class Simulator {
       }
       case 'PID':
         return this.execPid(el, ops, pin);
+      case 'BSL':
+      case 'BSR': {
+        // Edge-triggered bit shift register on an integer word, `length` bits long.
+        const prev = this.edgeMem.get(el.id) ?? false;
+        this.edgeMem.set(el.id, pin);
+        if (!pin || prev) return pin;
+        const len = Math.max(1, Math.min(32, Math.trunc(this.readNum(ops[2]))));
+        const mask = len === 32 ? 0xffffffff : (1 << len) - 1;
+        const word = (Math.trunc(this.readNum(a)) >>> 0) & mask;
+        const inBit = this.readBool(ops[1] ?? { kind: 'empty' }) ? 1 : 0;
+        const next =
+          el.instr === 'BSL' ? ((word << 1) | inBit) & mask : ((word >>> 1) | (inBit << (len - 1))) & mask;
+        this.writeNum(a, next >>> 0);
+        return pin;
+      }
+      case 'SHL':
+      case 'SHR': {
+        if (!pin) return false;
+        const n = Math.max(0, Math.min(31, Math.trunc(this.readNum(ops[1]))));
+        const x = Math.trunc(this.readNum(a));
+        const destType = ops[2]?.kind === 'tag' ? this.tags.get(ops[2].name)?.type : undefined;
+        const base = destType === 'INT' ? x & 0xffff : x >>> 0;
+        this.writeNum(ops[2], el.instr === 'SHL' ? base << n : base >>> n);
+        return true;
+      }
+      case 'NORM_X':
+      case 'SCALE_X': {
+        if (!pin) return false;
+        const min = this.readNum(a);
+        const v = this.readNum(ops[1]);
+        const max = this.readNum(ops[2]);
+        if (el.instr === 'NORM_X' && max === min) {
+          this.faults.add(`${el.id}:scaleRange`);
+          return false;
+        }
+        const r = el.instr === 'NORM_X' ? (v - min) / (max - min) : v * (max - min) + min;
+        this.writeNum(ops[3], this.isIntegerDest(ops[3]) ? Math.round(r) : r);
+        return true;
+      }
     }
   }
 
@@ -686,6 +725,8 @@ export class Simulator {
       case 'tag': {
         const v = this.values.get(op.name);
         if (op.member) return this.readMember(v, op.member);
+        if (op.bit !== undefined)
+          return typeof v === 'number' ? ((Math.trunc(v) >>> op.bit) & 1) === 1 : false;
         if (typeof v === 'boolean' || typeof v === 'number') return v;
         return 0;
       }
@@ -714,7 +755,13 @@ export class Simulator {
     if (op.kind !== 'tag' || op.member || this.forces.has(op.name)) return;
     const t = this.tags.get(op.name);
     if (!t) return;
-    this.values.set(op.name, t.type === 'BOOL' ? value : coerceNumber(t.type, value ? 1 : 0));
+    if (op.bit !== undefined) {
+      // Bit of an integer word (REG.3): set/clear that bit only.
+      if (t.type !== 'INT' && t.type !== 'DINT') return;
+      const cur = Math.trunc(Number(this.values.get(op.name) ?? 0));
+      const mask = 1 << op.bit;
+      this.values.set(op.name, coerceNumber(t.type, value ? cur | mask : cur & ~mask));
+    } else this.values.set(op.name, t.type === 'BOOL' ? value : coerceNumber(t.type, value ? 1 : 0));
     this.writers[op.name] = this.currentEl;
   }
 

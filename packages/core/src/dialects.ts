@@ -64,6 +64,12 @@ const BASE_MNEMONICS: Record<InstructionId, string> = {
   CALL: 'CALL',
   SCALE: 'SCALE',
   PID: 'PID',
+  BSL: 'BSL',
+  BSR: 'BSR',
+  SHL: 'SHL',
+  SHR: 'SHR',
+  NORM_X: 'NORM_X',
+  SCALE_X: 'SCALE_X',
 };
 
 const IEC_MEMBERS: Record<'TIMER' | 'COUNTER', Record<Member, string>> = {

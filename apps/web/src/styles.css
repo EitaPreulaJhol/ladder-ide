@@ -397,7 +397,13 @@ input[readonly] {
   padding: 6px 4px;
   background: var(--panel);
   border-right: 1px solid var(--border);
-  width: 84px;
+  width: 92px;
+}
+.sidenav button span:last-child {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.15;
 }
 .sidenav button {
   display: flex;
@@ -2144,4 +2150,10 @@ table.grid tr.unused td {
   margin: 4px 0 0 30px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.lang-select {
+  padding: 3px 4px;
+  font-size: 12px;
+  font-weight: 600;
 }

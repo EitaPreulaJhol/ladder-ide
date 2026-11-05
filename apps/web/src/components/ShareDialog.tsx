@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { locale } from '../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../store/project.ts';
 import { createShare, shareUrl, type ExpirationDays } from '../api.ts';
@@ -45,7 +46,7 @@ export function ShareDialog({ onClose }: { onClose: () => void }) {
             </div>
             <p className="muted small">
               {state.expiresAt
-                ? t('share.expiresOn', { date: new Date(state.expiresAt).toLocaleString('pt-BR') })
+                ? t('share.expiresOn', { date: new Date(state.expiresAt).toLocaleString(locale()) })
                 : t('share.neverExpires')}
             </p>
           </>

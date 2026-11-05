@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { locale } from '../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import {
   crossReference,
@@ -65,7 +66,7 @@ export function DocView() {
             {errors ? t('doc.withErrors', { n: errors }) : t('doc.noErrors')}
           </dd>
           <dt>{t('doc.generated')}</dt>
-          <dd>{new Date().toLocaleString('pt-BR')}</dd>
+          <dd>{new Date().toLocaleString(locale())}</dd>
         </dl>
       </header>
 

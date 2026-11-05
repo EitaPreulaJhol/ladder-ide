@@ -29,7 +29,7 @@ export function ConveyorPlant({ state, values, setInput, action }: PlantProps<Co
           strokeDasharray="4 3"
         />
         <text x={sx(BELT.push)} y={26} textAnchor="middle" className="plant-label">
-          rejeito
+          {t('plant.conveyor.reject')}
         </text>
         <rect
           x={X0}

@@ -8,7 +8,7 @@ export function MotorPlant({ state, values, setInput, action }: PlantProps<Motor
     <>
       <svg viewBox="0 0 340 190" className="plant-svg">
         <text x={10} y={18} className="plant-label">
-          Painel
+          {t('plant.motor.panel')}
         </text>
         <Lamp on={bit(values, 'H_RUN')} color="#22c55e" x={30} y={45} label="H_RUN" />
         <Lamp on={bit(values, 'H_FAULT')} color="#ef4444" x={80} y={45} label="H_FAULT" />

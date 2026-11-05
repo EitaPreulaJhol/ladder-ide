@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { locale } from '../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import {
   catalogFor,
@@ -116,7 +117,7 @@ export function HardwareView() {
         <h1>{t('hw.printTitle', { name: project.meta.name })}</h1>
         <p>
           {t('hw.printDate', {
-            date: new Date().toLocaleString('pt-BR'),
+            date: new Date().toLocaleString(locale()),
             dialect: getDialect(project.dialect).name,
           })}
           {cpu && ` · ${family!.vendor} ${cpu.name}`}

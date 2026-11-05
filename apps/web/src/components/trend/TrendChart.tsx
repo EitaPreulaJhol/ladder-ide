@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { locale } from '../../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import type { TrendEvent } from '@ladder/core';
 import { formatMs } from '../editor/format.ts';
@@ -56,12 +57,12 @@ export function formatTrendValue(v: number | boolean | undefined): string {
   if (v === undefined) return '—';
   if (typeof v === 'boolean') return v ? '1' : '0';
   return Number.isInteger(v)
-    ? v.toLocaleString('pt-BR')
-    : v.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    ? v.toLocaleString(locale())
+    : v.toLocaleString(locale(), { maximumFractionDigits: 2 });
 }
 
 function tickLabel(tm: number, step: number): string {
-  if (step < 1000) return `${(tm / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}s`;
+  if (step < 1000) return `${(tm / 1000).toLocaleString(locale(), { maximumFractionDigits: 2 })}s`;
   if (tm < 60_000) return `${tm / 1000}s`;
   const m = Math.floor(tm / 60_000);
   const sec = Math.round((tm % 60_000) / 1000);

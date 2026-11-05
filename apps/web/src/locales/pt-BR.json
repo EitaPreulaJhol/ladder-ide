@@ -31,7 +31,8 @@
     "theme": "Tema: {{mode}} (clique para alternar)",
     "theme_system": "automático (segue o sistema)",
     "theme_light": "claro",
-    "theme_dark": "escuro"
+    "theme_dark": "escuro",
+    "language": "Idioma"
   },
   "shared": {
     "banner": "Você está vendo um projeto compartilhado (somente leitura). Pode simular à vontade; para editar, faça uma cópia.",
@@ -339,7 +340,8 @@
       "temperature": "Temperatura",
       "speed": "Rotação",
       "tripped": "TÉRMICO DISPARADO",
-      "starts": "Partidas: {{n}}"
+      "starts": "Partidas: {{n}}",
+      "panel": "Painel"
     },
     "starDelta": {
       "title": "Partida estrela-triângulo",
@@ -365,7 +367,9 @@
       "conflicts": "Conflitos (pedestre verde com veículos liberados): {{n}}",
       "multiple": "Mais de uma luz acesa no semáforo de veículos",
       "button": "Botão do pedestre",
-      "resetFault": "Zerar conflitos"
+      "resetFault": "Zerar conflitos",
+      "vehicles": "Veículos",
+      "pedestrians": "Pedestres"
     },
     "conveyor": {
       "title": "Esteira seletora de caixas",
@@ -376,7 +380,8 @@
       "autoFeed": "Alimentação automática",
       "clear": "Limpar",
       "ok": "Corretas: {{n}}",
-      "wrong": "Erradas: {{n}}"
+      "wrong": "Erradas: {{n}}",
+      "reject": "rejeito"
     },
     "tank": {
       "title": "Controle de nível de tanque",
@@ -435,7 +440,9 @@
       "counter": "Contador de peças com lote e reset",
       "subroutines": "Sub-rotinas (CALL) e saltos (JMP/LBL)",
       "grafcetCylinders": "GRAFCET: cilindros A+ B+ A− B− (gera o ladder automaticamente)"
-    }
+    },
+    "language": "Idioma da interface",
+    "contentNote": "Os projetos de exemplo (nomes, comentários e descrições de tags) estão em português."
   },
   "widgets": {
     "on": "LIGADO",

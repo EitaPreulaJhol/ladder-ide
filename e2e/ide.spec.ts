@@ -420,3 +420,20 @@ test('a new GRAFCET starts with two steps and empty conditions flagged', async (
   await page.getByTestId('show-ladder').click();
   await expect(page.getByTestId('el-COIL-LAMPADA')).toBeVisible();
 });
+
+test('interface language: English and Spanish, remembered across reloads', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('run')).toContainText('Executar');
+  await page.getByTestId('language').selectOption('en');
+  await expect(page.getByTestId('run')).toContainText('Run');
+  await expect(page.getByTestId('nav-hardware')).toContainText('Hardware');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.reload();
+  await expect(page.getByTestId('run')).toContainText('Run');
+  await page.getByTestId('language').selectOption('es');
+  await expect(page.getByTestId('run')).toContainText('Ejecutar');
+  await page.getByTestId('nav-projects').click();
+  await expect(page.getByText('Los proyectos de ejemplo')).toBeVisible();
+  await page.getByTestId('language').selectOption('pt-BR');
+  await expect(page.getByTestId('run')).toContainText('Executar');
+});

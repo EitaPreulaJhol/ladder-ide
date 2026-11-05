@@ -10,6 +10,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3210',
     viewport: { width: 1440, height: 900 },
+    // The assertions use Portuguese texts; the interface follows the browser language.
+    locale: 'pt-BR',
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH }
       : {},

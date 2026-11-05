@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { locale } from '../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import {
   createProject,
@@ -13,9 +14,10 @@ import {
 import { useProject } from '../store/project.ts';
 import { deleteProject, listProjects, loadProject, saveProject, type StoredProject } from '../storage/db.ts';
 import { openProject } from '../session.ts';
+import { LANGUAGES, setLanguage, type Language } from '../i18n.ts';
 
 export function ProjectsView() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const project = useProject((s) => s.project);
   const readOnly = useProject((s) => s.sharedId !== null);
   const update = useProject((s) => s.update);
@@ -74,6 +76,17 @@ export function ProjectsView() {
               <small className="muted">{t('projects.dialectHelp')}</small>
             </label>
             <label className="field">
+              <span>{t('projects.language')}</span>
+              <select value={i18n.language} onChange={(e) => setLanguage(e.target.value as Language)}>
+                {LANGUAGES.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              {i18n.language !== 'pt-BR' && <small className="muted">{t('projects.contentNote')}</small>}
+            </label>
+            <label className="field">
               <span>{t('projects.scanTime')}</span>
               <input
                 type="number"
@@ -130,7 +143,7 @@ export function ProjectsView() {
                 {p.id === project.id && <span className="badge">{t('projects.current')}</span>}
                 <div className="muted small">
                   {getDialect(p.project.dialect).name} ·{' '}
-                  {t('projects.updated', { date: new Date(p.updatedAt).toLocaleString('pt-BR') })}
+                  {t('projects.updated', { date: new Date(p.updatedAt).toLocaleString(locale()) })}
                 </div>
               </div>
               <span className="grow" />

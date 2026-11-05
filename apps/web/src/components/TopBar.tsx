@@ -6,6 +6,7 @@ import { useSim } from '../store/sim.ts';
 import { downloadText, safeFileName } from '../storage/db.ts';
 import { ShareDialog } from './ShareDialog.tsx';
 import { useOnline } from '../pwa.ts';
+import { LANGUAGES, setLanguage, type Language } from '../i18n.ts';
 import { formatMs } from './editor/format.ts';
 import { getThemePref, NEXT_THEME, setThemePref, type ThemePref } from '../theme.ts';
 
@@ -14,7 +15,7 @@ const THEME_ICON: Record<ThemePref, string> = { system: '◐', light: '☀', dar
 const SPEEDS = [0.1, 0.25, 0.5, 1, 2, 5, 10];
 
 export function TopBar({ savedAt }: { savedAt: number | null }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const project = useProject((s) => s.project);
   const readOnly = useProject((s) => s.sharedId !== null);
   const canUndo = useProject((s) => s.past.length > 0);
@@ -111,6 +112,20 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
 
       <span className="grow" />
       {savedAt && !readOnly && <span className="muted small hide-narrow">✓ {t('top.saved')}</span>}
+      <select
+        className="lang-select"
+        value={i18n.language}
+        onChange={(e) => setLanguage(e.target.value as Language)}
+        aria-label={t('top.language')}
+        title={t('top.language')}
+        data-testid="language"
+      >
+        {LANGUAGES.map((l) => (
+          <option key={l.id} value={l.id}>
+            {l.short}
+          </option>
+        ))}
+      </select>
       <button
         className="icon theme-toggle"
         data-testid="theme-toggle"

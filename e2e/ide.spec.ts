@@ -457,3 +457,36 @@ test('PLCopen XML: export from the UI and import it back', async ({ page }, test
   await expect(page.getByTestId('el-COIL-K3_DELTA')).toBeVisible();
   await expect(page.getByTestId('problems-tab')).toHaveText(/\(0\)/);
 });
+
+test('HMI: screen from the I/O panel, add a bar and operate it', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-counter').click();
+  await page.getByTestId('nav-hmi').click();
+  await page.getByTestId('hmi-from-panel').click();
+  await expect(page.getByTestId('hmi-screen').getByTestId('pb-S_PECA')).toBeVisible();
+
+  await page.getByTestId('hmi-edit').click();
+  await page.getByTestId('hmi-add-bar').click();
+  await page.getByTestId('hmi-prop-tag').selectOption('PECAS');
+  await page.getByTestId('hmi-prop-label').fill('Peças');
+  await page.getByTestId('hmi-prop-label').press('Tab');
+  await page.getByTestId('hmi-add-nav').click();
+  await page.getByTestId('hmi-edit').click(); // back to operate
+
+  await page.getByTestId('run').click();
+  const button = page.getByTestId('hmi-screen').getByTestId('pb-S_PECA');
+  for (let i = 0; i < 3; i++) {
+    await button.hover();
+    await page.mouse.down();
+    await page.waitForTimeout(80);
+    await page.mouse.up();
+    await page.waitForTimeout(80);
+  }
+  await expect(page.getByTestId('hmi-w-bar-PECAS')).toContainText('3');
+  await expect(page.getByTestId('hmi-w-bar-PECAS')).toContainText('Peças');
+  // Saved with the project: still there after a reload.
+  await page.reload();
+  await page.getByTestId('nav-hmi').click();
+  await expect(page.getByTestId('hmi-w-bar-PECAS')).toBeVisible();
+});

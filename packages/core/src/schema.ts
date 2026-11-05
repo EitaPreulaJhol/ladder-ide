@@ -83,6 +83,39 @@ const WidgetSchema = z.object({
   max: z.number().optional(),
 });
 
+const HmiWidgetSchema = z.object({
+  id,
+  kind: z.enum([
+    'pushbutton',
+    'pushbuttonNC',
+    'toggle',
+    'selector',
+    'sensor',
+    'lamp',
+    'display',
+    'slider',
+    'text',
+    'bar',
+    'numeric',
+    'nav',
+    'trend',
+  ]),
+  tag: text(80),
+  label: text(200),
+  x: z.number().min(-100).max(900),
+  y: z.number().min(-100).max(600),
+  w: z.number().min(10).max(800),
+  h: z.number().min(10).max(480),
+  color: text(32).optional(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+  target: text(64).optional(),
+});
+
+const HmiSchema = z.object({
+  screens: z.array(z.object({ id, name: text(60), widgets: z.array(HmiWidgetSchema).max(200) })).max(30),
+});
+
 export const ProjectSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   id,
@@ -108,6 +141,7 @@ export const ProjectSchema = z.object({
   sim: z.object({ scanTimeMs: z.number().min(1).max(1000) }),
   trend: z.array(text(80)).max(32).optional(),
   grafcets: z.array(GrafcetSchema).max(20).optional(),
+  hmi: HmiSchema.optional(),
 });
 
 const MAX_DEPTH = 40;

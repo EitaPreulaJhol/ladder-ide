@@ -8,7 +8,8 @@
     "tags": "Tags",
     "hardware": "Hardware",
     "projects": "Projetos",
-    "doc": "Documentação"
+    "doc": "Documentação",
+    "hmi": "IHM"
   },
   "top": {
     "dialect": "Dialeto",
@@ -708,5 +709,39 @@
     "condition": "Condição da transição {{from}} → {{to}}",
     "conditionPlaceholder": "condição (ex.: A1 & !B1)",
     "loopTo": "Depois da última transição, volta para a"
+  },
+  "hmi": {
+    "title": "Telas de IHM",
+    "empty": "Nenhuma tela ainda. Monte telas de operação (800 × 480, como uma IHM de 7\") com botões, lâmpadas, displays, barras, entradas numéricas, navegação e gráficos ligados às tags.",
+    "createFromPanel": "Criar a partir do Painel de I/O",
+    "createEmpty": "Tela em branco",
+    "defaultName": "Tela {{n}}",
+    "addScreen": "Tela",
+    "edit": "Editar telas",
+    "run": "Operar",
+    "screenName": "Nome da tela",
+    "deleteScreen": "Excluir esta tela",
+    "deleteScreenConfirm": "Excluir a tela “{{name}}”?",
+    "help": "Clique num item da paleta para adicioná-lo. Arraste para mover, use o canto inferior direito para redimensionar e Del para excluir o selecionado.",
+    "newText": "Texto",
+    "noTag": "— sem tag —",
+    "target": "Ir para a tela",
+    "color": "Cor",
+    "deleteWidget": "Excluir item",
+    "kinds": {
+      "pushbutton": "Botão NA",
+      "pushbuttonNC": "Botão NF",
+      "toggle": "Chave",
+      "selector": "Seletora",
+      "sensor": "Sensor",
+      "lamp": "Lâmpada",
+      "display": "Display",
+      "slider": "Potenciômetro",
+      "text": "Texto",
+      "bar": "Barra",
+      "numeric": "Entrada numérica",
+      "nav": "Navegação",
+      "trend": "Gráfico"
+    }
   }
 }

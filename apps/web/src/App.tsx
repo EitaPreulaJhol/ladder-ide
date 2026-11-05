@@ -14,12 +14,14 @@ import { TagsView } from './components/TagsView.tsx';
 import { HardwareView } from './components/HardwareView.tsx';
 import { ProjectsView } from './components/ProjectsView.tsx';
 import { DocView } from './components/DocView.tsx';
+import { HmiView } from './components/hmi/HmiView.tsx';
 import { bootLocal, bootShared, forkShared, startAutosave } from './session.ts';
 
 const NAV: { id: View; icon: string }[] = [
   { id: 'editor', icon: '⊢' },
   { id: 'tags', icon: '#' },
   { id: 'hardware', icon: '▦' },
+  { id: 'hmi', icon: '🖥' },
   { id: 'doc', icon: '🖨' },
   { id: 'projects', icon: '☰' },
 ];
@@ -134,6 +136,7 @@ export function App() {
             {view === 'editor' && <LadderEditor />}
             {view === 'tags' && <TagsView />}
             {view === 'hardware' && <HardwareView />}
+            {view === 'hmi' && <HmiView />}
             {view === 'doc' && <DocView />}
             {view === 'projects' && <ProjectsView />}
           </div>

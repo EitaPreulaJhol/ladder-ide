@@ -201,6 +201,37 @@ export interface IoWidget {
   max?: number;
 }
 
+// ---------------------------------------------------------------- HMI screens
+
+export type HmiWidgetKind = WidgetKind | 'text' | 'bar' | 'numeric' | 'nav' | 'trend';
+
+export interface HmiWidget {
+  id: string;
+  kind: HmiWidgetKind;
+  /** Bound tag (not used by 'text' and 'nav'). */
+  tag: string;
+  label: string;
+  /** Position and size on the 800 × 480 screen. */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  color?: string;
+  min?: number;
+  max?: number;
+  /** Target screen of a 'nav' button. */
+  target?: string;
+}
+
+export interface HmiScreen {
+  id: string;
+  name: string;
+  widgets: HmiWidget[];
+}
+
+export const HMI_WIDTH = 800;
+export const HMI_HEIGHT = 480;
+
 export interface SimSettings {
   /** Simulated scan time in ms. */
   scanTimeMs: number;
@@ -229,6 +260,7 @@ export interface Project {
   /** Signals shown in the trend chart (tags or members such as `T1.DN`). */
   trend?: string[];
   grafcets?: Grafcet[];
+  hmi?: { screens: HmiScreen[] };
 }
 
 // ---------------------------------------------------------------- runtime values

@@ -8,7 +8,8 @@
     "tags": "Tags",
     "hardware": "Hardware",
     "projects": "Proyectos",
-    "doc": "Documentación"
+    "doc": "Documentación",
+    "hmi": "HMI"
   },
   "top": {
     "dialect": "Dialecto",
@@ -708,5 +709,39 @@
     "condition": "Condición de la transición {{from}} → {{to}}",
     "conditionPlaceholder": "condición (p. ej. A1 & !B1)",
     "loopTo": "Tras la última transición, volver a la"
+  },
+  "hmi": {
+    "title": "Pantallas HMI",
+    "empty": "Aún no hay pantallas. Crea pantallas de operación (800 × 480, como una HMI de 7\") con botones, pilotos, displays, barras, entradas numéricas, navegación y gráficos vinculados a tags.",
+    "createFromPanel": "Crear desde el panel de E/S",
+    "createEmpty": "Pantalla en blanco",
+    "defaultName": "Pantalla {{n}}",
+    "addScreen": "Pantalla",
+    "edit": "Editar pantallas",
+    "run": "Operar",
+    "screenName": "Nombre de la pantalla",
+    "deleteScreen": "Eliminar esta pantalla",
+    "deleteScreenConfirm": "¿Eliminar la pantalla “{{name}}”?",
+    "help": "Haz clic en un elemento de la paleta para añadirlo. Arrastra para mover, usa la esquina inferior derecha para redimensionar y Supr para eliminar el seleccionado.",
+    "newText": "Texto",
+    "noTag": "— sin tag —",
+    "target": "Ir a la pantalla",
+    "color": "Color",
+    "deleteWidget": "Eliminar elemento",
+    "kinds": {
+      "pushbutton": "Pulsador NA",
+      "pushbuttonNC": "Pulsador NC",
+      "toggle": "Interruptor",
+      "selector": "Selector",
+      "sensor": "Sensor",
+      "lamp": "Piloto",
+      "display": "Display",
+      "slider": "Potenciómetro",
+      "text": "Texto",
+      "bar": "Barra",
+      "numeric": "Entrada numérica",
+      "nav": "Navegación",
+      "trend": "Gráfico"
+    }
   }
 }

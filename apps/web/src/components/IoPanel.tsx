@@ -152,7 +152,7 @@ export function IoPanel() {
   );
 }
 
-function Widget({
+export function Widget({
   w,
   value,
   setInput,

@@ -129,7 +129,13 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       if (projectChanged) fieldFaults.clear(sim);
       else fieldFaults.reapply(m.project, sim);
       if (scenarioChanged) initPlant();
-      recorder.setSignals(m.project.trend ?? []);
+      // Trend tab signals plus the tags shown by trend widgets on HMI screens.
+      recorder.setSignals([
+        ...(m.project.trend ?? []),
+        ...(m.project.hmi?.screens ?? []).flatMap((sc) =>
+          sc.widgets.filter((w) => w.kind === 'trend' && w.tag).map((w) => w.tag),
+        ),
+      ]);
       if (status === 'stopped') {
         sim.reset();
         resetTrend();

@@ -8,7 +8,8 @@
     "tags": "Tags",
     "hardware": "Hardware",
     "projects": "Projects",
-    "doc": "Documentation"
+    "doc": "Documentation",
+    "hmi": "HMI"
   },
   "top": {
     "dialect": "Dialect",
@@ -708,5 +709,39 @@
     "condition": "Condition of transition {{from}} → {{to}}",
     "conditionPlaceholder": "condition (e.g. A1 & !B1)",
     "loopTo": "After the last transition, go back to"
+  },
+  "hmi": {
+    "title": "HMI screens",
+    "empty": "No screens yet. Build operator screens (800 × 480, like a 7\" HMI) with buttons, lamps, displays, bars, numeric inputs, navigation and charts bound to tags.",
+    "createFromPanel": "Create from the I/O panel",
+    "createEmpty": "Blank screen",
+    "defaultName": "Screen {{n}}",
+    "addScreen": "Screen",
+    "edit": "Edit screens",
+    "run": "Operate",
+    "screenName": "Screen name",
+    "deleteScreen": "Delete this screen",
+    "deleteScreenConfirm": "Delete the screen “{{name}}”?",
+    "help": "Click a palette item to add it. Drag to move, use the bottom-right corner to resize and Del to delete the selected item.",
+    "newText": "Text",
+    "noTag": "— no tag —",
+    "target": "Go to screen",
+    "color": "Color",
+    "deleteWidget": "Delete item",
+    "kinds": {
+      "pushbutton": "NO button",
+      "pushbuttonNC": "NC button",
+      "toggle": "Switch",
+      "selector": "Selector",
+      "sensor": "Sensor",
+      "lamp": "Lamp",
+      "display": "Display",
+      "slider": "Potentiometer",
+      "text": "Text",
+      "bar": "Bar",
+      "numeric": "Numeric input",
+      "nav": "Navigation",
+      "trend": "Chart"
+    }
   }
 }

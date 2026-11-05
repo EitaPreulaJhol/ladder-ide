@@ -22,6 +22,8 @@ export interface SimSnapshot {
   trace: Trace;
   forces: Record<string, boolean | number>;
   faults: string[];
+  /** Last instruction (element id) that wrote each tag during the last scan. */
+  writers: Record<string, string>;
 }
 
 export function newTimer(): TimerValue {
@@ -102,6 +104,8 @@ export class Simulator {
   private edgeMem = new Map<string, boolean>();
   private trace: Trace = {};
   private faults = new Set<string>();
+  private writers: Record<string, string> = {};
+  private currentEl = '';
   private dt = 0;
   timeMs = 0;
   scanCount = 0;
@@ -211,6 +215,7 @@ export class Simulator {
     this.scanCount++;
     this.faults.clear();
     this.trace = {};
+    this.writers = {};
 
     for (const [name, v] of this.inputImage)
       if (!this.forces.has(name)) this.values.set(name, this.coerce(name, v));
@@ -229,6 +234,7 @@ export class Simulator {
       trace: this.trace,
       forces: Object.fromEntries(this.forces),
       faults: [...this.faults],
+      writers: { ...this.writers },
     };
   }
 
@@ -255,6 +261,7 @@ export class Simulator {
   private exec(el: Element, pin: boolean): boolean {
     const ops = this.compiled.get(el.id) ?? [];
     const a = ops[0] ?? { kind: 'empty' };
+    this.currentEl = el.id;
     switch (el.instr) {
       case 'NO':
         return pin && this.readBool(a);
@@ -292,6 +299,7 @@ export class Simulator {
       case 'RES': {
         if (!pin || a.kind !== 'tag') return pin;
         const v = this.values.get(a.name);
+        if (isTimer(v) || isCounter(v)) this.writers[a.name] = el.id;
         if (isTimer(v)) Object.assign(v, { acc: 0, en: false, tt: false, dn: false });
         else if (isCounter(v)) Object.assign(v, { acc: 0, dn: false, qd: true });
         return pin;
@@ -369,6 +377,7 @@ export class Simulator {
       this.faults.add(`${el.id}:noTimer`);
       return false;
     }
+    if (target.kind === 'tag') this.writers[target.name] = el.id;
     t.pre = Math.max(0, this.readNum(presetOp));
     const dt = this.dt;
     switch (el.instr) {
@@ -437,6 +446,7 @@ export class Simulator {
       this.faults.add(`${el.id}:noCounter`);
       return false;
     }
+    if (target.kind === 'tag') this.writers[target.name] = el.id;
     c.pre = this.readNum(presetOp);
     const clamp = (n: number) => Math.max(-32768, Math.min(32767, n));
     if (el.instr === 'CTU' || el.instr === 'CTUD') {
@@ -540,6 +550,7 @@ export class Simulator {
     const t = this.tags.get(op.name);
     if (!t) return;
     this.values.set(op.name, t.type === 'BOOL' ? value : coerceNumber(t.type, value ? 1 : 0));
+    this.writers[op.name] = this.currentEl;
   }
 
   private writeNum(op: ParsedOperand | undefined, value: number): void {
@@ -551,10 +562,12 @@ export class Simulator {
       if ((isTimer(cur) || isCounter(cur)) && (op.member === 'ACC' || op.member === 'PRE')) {
         if (op.member === 'ACC') cur.acc = Math.trunc(value);
         else cur.pre = Math.trunc(value);
+        this.writers[op.name] = this.currentEl;
       }
       return;
     }
     if (t.type === 'TIMER' || t.type === 'COUNTER') return;
     this.values.set(op.name, t.type === 'BOOL' ? value !== 0 : coerceNumber(t.type, value));
+    this.writers[op.name] = this.currentEl;
   }
 }

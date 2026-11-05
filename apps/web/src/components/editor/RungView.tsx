@@ -24,6 +24,8 @@ interface Props {
   cursor: Cursor | null;
   readOnly: boolean;
   minCols: number;
+  /** Elements on an explained power path ("por que?"). */
+  marks?: Map<string, 'ok' | 'block' | 'idle' | 'target'>;
 }
 
 function selectedIds(rung: Rung, sel: Selection | null): Set<string> {
@@ -56,6 +58,7 @@ export const RungView = memo(function RungView({
   cursor,
   readOnly,
   minCols,
+  marks,
 }: Props) {
   const { t } = useTranslation();
   const layout = useMemo(() => layoutRung(rung, minCols), [rung, minCols]);
@@ -86,7 +89,7 @@ export const RungView = memo(function RungView({
   };
 
   return (
-    <div className={`rung${rungSelected ? ' selected' : ''}`} data-rung={index + 1}>
+    <div className={`rung${rungSelected ? ' selected' : ''}`} data-rung={index + 1} data-rung-id={rung.id}>
       <button className="rung-gutter" onClick={() => select({ rungId: rung.id })} title={`Rung ${index + 1}`}>
         {String(index + 1).padStart(3, '0')}
       </button>
@@ -135,7 +138,8 @@ export const RungView = memo(function RungView({
           {layout.items.map(({ el, col, row }) => (
             <div
               key={el.id}
-              className={`cell${sel.has(el.id) ? ' selected' : ''}`}
+              className={`cell${sel.has(el.id) ? ' selected' : ''}${marks?.get(el.id) ? ` explain-${marks.get(el.id)}` : ''}`}
+              data-el={el.id}
               style={{ left: x(col), top: row * CH }}
               draggable={!readOnly}
               data-testid={`el-${el.instr}-${el.operands[0] ?? ''}`}

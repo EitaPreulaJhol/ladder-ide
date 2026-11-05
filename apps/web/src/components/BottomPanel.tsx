@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { tagAddress, validateProject, type Tag, type Value } from '@ladder/core';
+import { crossReference, tagAddress, validateProject, type Tag, type Value } from '@ladder/core';
 import { useProject } from '../store/project.ts';
 import { useSim } from '../store/sim.ts';
 import { formatMs, formatValue } from './editor/format.ts';
 import { signalsForTag, TrendPanel } from './trend/TrendPanel.tsx';
+import { useUi } from '../store/ui.ts';
+import { goToElement } from '../navigation.ts';
 
 const HEIGHT_KEY = 'ladder-ide:bottom-height';
 function loadHeight(): number {
@@ -150,6 +152,17 @@ function Problems({ diagnostics }: { diagnostics: ReturnType<typeof validateProj
   );
 }
 
+/** "Por que?" from the watch table: explain the tag and jump to the instruction that wrote it last. */
+function explainFromWatch(tag: string) {
+  useUi.getState().setExplain(tag);
+  useUi.getState().setDock('props');
+  const project = useProject.getState().project;
+  const writerId = useSim.getState().snapshot?.writers?.[tag];
+  const refs = crossReference(project).get(tag) ?? [];
+  const ref = refs.find((r) => r.elementId === writerId) ?? refs.find((r) => r.access !== 'read');
+  if (ref) goToElement(ref.programId, ref.rungId, ref.elementId);
+}
+
 function WatchTable() {
   const { t } = useTranslation();
   const project = useProject((s) => s.project);
@@ -254,6 +267,14 @@ function WatchRow({
           data-testid={`trend-toggle-${tag.name}`}
         >
           📈
+        </button>
+        <button
+          className="trend-btn explain-btn"
+          onClick={() => explainFromWatch(tag.name)}
+          title={t('explain.button', { tag: tag.name })}
+          data-testid={`explain-watch-${tag.name}`}
+        >
+          🔎
         </button>{' '}
         {tag.name}
       </td>

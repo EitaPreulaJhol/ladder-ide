@@ -746,7 +746,8 @@ input[readonly] {
   flex-direction: column;
   gap: 3px;
 }
-.field > span {
+.field > span,
+.field > label {
   font-size: 12px;
   color: var(--muted);
 }
@@ -1681,4 +1682,155 @@ table.grid tr.unused td {
   background: var(--accent);
   opacity: 0.5;
   outline: none;
+}
+
+/* ------------------------------------------------------------ cross reference / explain */
+
+.operand-tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  justify-content: space-between;
+}
+.xref {
+  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.xref summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.xref-list {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.xref-list li.current {
+  font-weight: 600;
+}
+.xref-list .link {
+  text-decoration: none;
+  color: var(--text);
+  text-align: left;
+  white-space: normal;
+  font-size: 12px;
+}
+.xref-list .link:hover {
+  text-decoration: underline;
+}
+.xref-access {
+  display: inline-block;
+  width: 22px;
+  font-family: var(--mono);
+  color: var(--muted);
+}
+.xref-access.write,
+.xref-access.readWrite {
+  color: var(--accent-2);
+}
+.xref-row td {
+  background: var(--panel-2);
+}
+.small-btn {
+  font-size: 12px;
+  padding: 2px 8px;
+  flex: none;
+}
+.explain {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--rung-sel);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.explain p {
+  margin: 0;
+}
+.explain-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.explain-value {
+  font-size: 15px;
+}
+.explain-path {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.explain-steps {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  font-size: 12px;
+}
+.explain-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
+}
+.explain-step .link {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 12px;
+}
+.explain-icon {
+  width: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.explain-step.ok .explain-icon {
+  color: var(--status-run-text);
+}
+.explain-step.block .explain-icon,
+.explain-blocker {
+  color: var(--danger-text);
+}
+.explain-step.idle .explain-icon {
+  color: var(--muted);
+}
+.badge-on,
+.badge-off {
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+}
+.badge-on {
+  background: var(--status-run-bg);
+  color: var(--status-run-text);
+}
+.badge-off {
+  background: var(--status-stop-bg);
+  color: var(--status-stop-text);
+}
+.cell.explain-ok {
+  outline: 2px solid var(--power);
+  outline-offset: -2px;
+}
+.cell.explain-block {
+  outline: 2px solid var(--danger);
+  outline-offset: -2px;
+}
+.cell.explain-idle {
+  outline: 2px dashed var(--muted);
+  outline-offset: -2px;
+}
+.cell.explain-target {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.trend-btn:hover,
+.trend-btn:focus-visible {
+  opacity: 1;
+  filter: none;
 }

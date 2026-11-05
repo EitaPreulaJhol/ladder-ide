@@ -201,3 +201,35 @@ test('automatic grading: reference passes, a broken program fails and shows its 
   await page.getByTestId('trend-live').click();
   await expect(page.getByTestId('trend-add')).toBeVisible();
 });
+
+test('cross reference and "why?" explanation of a coil', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-scenario:motor').click();
+
+  // Cross reference from the tags table navigates to the instruction.
+  await page.getByTestId('nav-tags').click();
+  await page.getByTestId('xref-K_MOTOR').click();
+  const refs = page.locator('.xref-row .xref-list li');
+  await expect(refs).toHaveCount(3);
+  await refs.nth(1).getByRole('button').click(); // the coil (write) in rung 1
+  await expect(page.getByTestId('nav-editor')).toHaveClass(/active/);
+  await expect(page.locator('.cell.selected')).toHaveCount(1);
+
+  // Explanation while running: blocked, then energized through the seal-in.
+  await page.getByTestId('run').click();
+  await page.getByTestId('explain-watch-K_MOTOR').click();
+  const explain = page.getByTestId('explain');
+  await expect(explain).toContainText('bloqueia aqui');
+  await expect(explain).toContainText('sem energia');
+  await expect(page.locator('.cell.explain-block')).not.toHaveCount(0);
+
+  await page.getByTestId('dock-plant').click();
+  await page.getByTestId('plant-B_START').hover();
+  await page.mouse.down();
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await page.locator('.dock .tabs button').first().click();
+  await expect(explain).toContainText('energizada');
+  await expect(explain).not.toContainText('bloqueia aqui');
+});

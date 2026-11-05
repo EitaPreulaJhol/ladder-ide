@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject, type View } from './store/project.ts';
 import { useSim } from './store/sim.ts';
+import { useUi } from './store/ui.ts';
 import { TopBar } from './components/TopBar.tsx';
 import { LadderEditor, useEditorShortcuts } from './components/editor/LadderEditor.tsx';
 import { Properties } from './components/editor/Properties.tsx';
@@ -20,8 +21,6 @@ const NAV: { id: View; icon: string }[] = [
   { id: 'projects', icon: '☰' },
 ];
 
-type DockTab = 'props' | 'panel' | 'plant';
-
 export function App() {
   const { t } = useTranslation();
   const [boot, setBoot] = useState<{ status: 'loading' | 'ready' | 'error'; error?: string }>({
@@ -33,7 +32,8 @@ export function App() {
   const sharedId = useProject((s) => s.sharedId);
   const scenarioId = useProject((s) => s.project?.scenarioId);
   const setView = useProject((s) => s.setView);
-  const [dock, setDock] = useState<DockTab>('panel');
+  const dock = useUi((s) => s.dock);
+  const setDock = useUi((s) => s.setDock);
   useEditorShortcuts();
 
   useEffect(() => {
@@ -59,7 +59,14 @@ export function App() {
   }, [selectedNode, status]);
   useEffect(() => {
     if (status === 'running')
-      setDock((d) => (d === 'props' ? (useProject.getState().project.scenarioId ? 'plant' : 'panel') : d));
+      // ...unless the user is reading an explanation ("por que?") in the properties tab.
+      setDock((d) =>
+        d === 'props' && !useUi.getState().explain
+          ? useProject.getState().project.scenarioId
+            ? 'plant'
+            : 'panel'
+          : d,
+      );
   }, [status]);
 
   if (boot.status === 'error')

@@ -5,6 +5,7 @@ import { useSim } from '../../store/sim.ts';
 import { Palette } from './Palette.tsx';
 import { RungView } from './RungView.tsx';
 import { CW, PAD } from './format.ts';
+import { explainMarks, useExplanation } from '../xref/ExplainPanel.tsx';
 
 export function LadderEditor() {
   const { t } = useTranslation();
@@ -17,6 +18,8 @@ export function LadderEditor() {
   const snapshot = useSim((s) => s.snapshot);
   const status = useSim((s) => s.status);
   const live = status !== 'stopped';
+  const explanation = useExplanation();
+  const marks = explainMarks(explanation);
   const scroller = useRef<HTMLDivElement>(null);
   const [minCols, setMinCols] = useState(8);
 
@@ -104,6 +107,7 @@ export function LadderEditor() {
             cursor={cursor}
             readOnly={readOnly}
             minCols={minCols}
+            marks={explanation?.paths[0]?.ref.rungId === r.id ? marks : undefined}
           />
         ))}
         {!readOnly && (

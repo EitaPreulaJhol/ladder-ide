@@ -433,5 +433,39 @@
     "boxesLost": "{{n}} caixa(s) não chegaram a destino",
     "overflow": "O tanque transbordou",
     "outOfBand": "O nível saiu da faixa entre 10% e 90%"
+  },
+  "xref": {
+    "summary": "Referências: {{reads}} leitura(s) · {{writes}} escrita(s)",
+    "none": "Tag não usada no programa.",
+    "read": "leitura",
+    "write": "escrita",
+    "readWrite": "leitura e escrita"
+  },
+  "explain": {
+    "why": "Por que?",
+    "button": "Explicar o valor atual de {{tag}}",
+    "title": "Por que {{tag}} tem esse valor?",
+    "close": "Fechar explicação",
+    "needsRun": "Inicie a simulação (ou avance um scan) para ver o caminho de energia.",
+    "unknownTag": "Tag não encontrada.",
+    "source": {
+      "program": "Escrita por último no rung {{n}} ({{instr}}) neste scan.",
+      "held": "Nenhuma instrução escreveu neste scan: o valor foi mantido desde a última escrita (SET/RESET ou retentivo).",
+      "input": "Não é escrita pelo programa: o valor vem do campo, do painel de I/O, da planta ou é o valor inicial.",
+      "forced": "Valor forçado pelo usuário: o programa não consegue alterá-lo.",
+      "none": "Nenhuma instrução escreve nesta tag."
+    },
+    "duplicateCoils": "Esta tag é escrita por mais de uma bobina: só a última do scan vale (bobina dupla).",
+    "powered": "energizada",
+    "unpowered": "sem energia",
+    "lastWriter": "última escrita",
+    "branch": "Ramo em paralelo (OU)",
+    "blocksHere": "bloqueia aqui",
+    "directRail": "Ligada direto ao barramento (sem condições).",
+    "state": {
+      "ok": "conduz",
+      "block": "bloqueia",
+      "idle": "não avaliado (sem energia)"
+    }
   }
 }

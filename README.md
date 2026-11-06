@@ -2,25 +2,25 @@
 
 Ambiente web aberto para **treinar, testar e planejar** programas Ladder de CLPs industriais.
 
-- **Editor visual de rungs** — paleta clicável/arrastável, ramificações em paralelo (OU), cópia/colagem, desfazer/refazer, comentários por rung, criação automática de tags.
-- **Simulador com ciclo de varredura real** — leitura de entradas → execução dos rungs em ordem → saídas; tempo simulado (0,1× a 10×), passo único, forçar tags, fluxo de energia animado. Roda num Web Worker.
-- **Multi-dialeto** — o mesmo programa visto como **IEC 61131-3**, **Siemens** (TIA/STEP 7), **Allen-Bradley** (RSLogix 500), **Schneider** (Machine Expert Basic) ou **Haiwell** (HaiwellHappy): mnemônicos (`NO`/`XIC`, `S`/`OTL`/`SET`…), membros (`T1.Q`/`T1.DN`/`%TM1.V`) e endereços (`%IX0.0` / `I0.0` / `I:2/0` / `%I0.0` / `X0`). Com um modelo real escolhido, o dialeto segue o fabricante.
-- **Gráfico de tendência** — sinais (tags ou membros como `T1.DN`) registrados scan a scan, com cursor, janela de tempo e exportação em CSV.
-- **Correção automática dos exercícios** — "Verificar solução" roda o programa numa simulação isolada e acelerada da planta e confere cada critério; a gravação de cada teste abre no gráfico de tendência.
-- **"Por que?" e referência cruzada** — explica o valor de uma tag durante a simulação (quem escreveu por último, caminho de energia, contato que bloqueia, bobina dupla) e lista onde cada tag é lida e escrita.
-- **Injeção de falhas** — sensores travados, fio rompido, contatos colados e saídas queimadas no campo (não no programa), mais um desafio de falha escondida para treinar diagnóstico.
-- **GRAFCET** — editor de etapas, transições e ações que gera o ladder automaticamente (método de uma memória por etapa), com etapas ativas destacadas durante a simulação.
-- **Programas e sub-rotinas** — vários programas principais e sub-rotinas (`CALL`/`JSR`), saltos (`JMP`/`LBL`), biestáveis `SR`/`RS`, escala analógica (`SCALE`/`SCP`) e `PID`.
-- **Telas de IHM** — editor de telas de operação (800 × 480) com botões, lâmpadas, displays, barras, entradas numéricas, navegação e gráficos, ligados às tags e operáveis durante a simulação.
-- **Painel de I/O virtual** — botões NA/NF, chaves, sensores, lâmpadas, displays e potenciômetros ligados às tags.
-- **Plantas virtuais com exercícios** — partida direta, estrela-triângulo, semáforo, esteira seletora, controle de nível liga/desliga, controle de nível com PID e cilindros pneumáticos A+ B+ A− B−, cada uma com enunciado, solução de referência e correção automática.
-- **Planta editável** — monte a planta com componentes (esteiras, alimentador, sensores, expulsor, caixas, cilindros, motores, tanques, bombas, válvulas, forno, sinalização e botões), ligue cada sinal a uma tag e opere durante a simulação. As plantas dos exercícios podem ser abertas como ponto de partida editável.
-- **Modelos reais de CLP** — Siemens S7-1200 (1211C/1212C/1214C/1215C), Allen-Bradley MicroLogix 1100/1400, Schneider Modicon M221 e Haiwell séries C/T: I/O embarcado, módulos de expansão com códigos de catálogo, limite de módulos por CPU, endereçamento padrão de cada fabricante e aviso de instruções que o modelo não tem. Dados tirados de manuais oficiais (fontes listadas na tela); pontos não confirmados aparecem marcados como "a confirmar".
-- **Planejamento de hardware** — rack genérico ou do modelo escolhido; endereços calculados automaticamente; lista de I/O e tags em CSV; versão para impressão.
+- **Editor visual de rungs** - paleta clicável/arrastável, ramificações em paralelo (OU), cópia/colagem, desfazer/refazer, comentários por rung, criação automática de tags.
+- **Simulador com ciclo de varredura real** - leitura de entradas → execução dos rungs em ordem → saídas; tempo simulado (0,1× a 10×), passo único, forçar tags, fluxo de energia animado. Roda num Web Worker.
+- **Multi-dialeto** - o mesmo programa visto como **IEC 61131-3**, **Siemens** (TIA/STEP 7), **Allen-Bradley** (RSLogix 500), **Schneider** (Machine Expert Basic) ou **Haiwell** (HaiwellHappy): mnemônicos (`NO`/`XIC`, `S`/`OTL`/`SET`…), membros (`T1.Q`/`T1.DN`/`%TM1.V`) e endereços (`%IX0.0` / `I0.0` / `I:2/0` / `%I0.0` / `X0`). Com um modelo real escolhido, o dialeto segue o fabricante.
+- **Gráfico de tendência** - sinais (tags ou membros como `T1.DN`) registrados scan a scan, com cursor, janela de tempo e exportação em CSV.
+- **Correção automática dos exercícios** - "Verificar solução" roda o programa numa simulação isolada e acelerada da planta e confere cada critério; a gravação de cada teste abre no gráfico de tendência.
+- **"Por que?" e referência cruzada** - explica o valor de uma tag durante a simulação (quem escreveu por último, caminho de energia, contato que bloqueia, bobina dupla) e lista onde cada tag é lida e escrita.
+- **Injeção de falhas** - sensores travados, fio rompido, contatos colados e saídas queimadas no campo (não no programa), mais um desafio de falha escondida para treinar diagnóstico.
+- **GRAFCET** - editor de etapas, transições e ações que gera o ladder automaticamente (método de uma memória por etapa), com etapas ativas destacadas durante a simulação.
+- **Programas e sub-rotinas** - vários programas principais e sub-rotinas (`CALL`/`JSR`), saltos (`JMP`/`LBL`), biestáveis `SR`/`RS`, escala analógica (`SCALE`/`SCP`) e `PID`.
+- **Telas de IHM** - editor de telas de operação (800 × 480) com botões, lâmpadas, displays, barras, entradas numéricas, navegação e gráficos, ligados às tags e operáveis durante a simulação.
+- **Painel de I/O virtual** - botões NA/NF, chaves, sensores, lâmpadas, displays e potenciômetros ligados às tags.
+- **Plantas virtuais com exercícios** - partida direta, estrela-triângulo, semáforo, esteira seletora, controle de nível liga/desliga, controle de nível com PID e cilindros pneumáticos A+ B+ A− B−, cada uma com enunciado, solução de referência e correção automática.
+- **Planta editável** - monte a planta com componentes (esteiras, alimentador, sensores, expulsor, caixas, cilindros, motores, tanques, bombas, válvulas, forno, sinalização e botões), ligue cada sinal a uma tag e opere durante a simulação. As plantas dos exercícios podem ser abertas como ponto de partida editável.
+- **Modelos reais de CLP** - Siemens S7-1200 (1211C/1212C/1214C/1215C), Allen-Bradley MicroLogix 1100/1400, Schneider Modicon M221 e Haiwell séries C/T: I/O embarcado, módulos de expansão com códigos de catálogo, limite de módulos por CPU, endereçamento padrão de cada fabricante e aviso de instruções que o modelo não tem. Dados tirados de manuais oficiais (fontes listadas na tela); pontos não confirmados aparecem marcados como "a confirmar".
+- **Planejamento de hardware** - rack genérico ou do modelo escolhido; endereços calculados automaticamente; lista de I/O e tags em CSV; versão para impressão.
 - **Funciona offline e pode ser instalado** (PWA): depois da primeira visita, editor, simulação e projetos salvos funcionam sem internet.
 - **Documentação do projeto** pronta para imprimir ou salvar em PDF: capa, programas, tags com referência cruzada e lista de I/O.
-- **Tema claro/escuro** — botão na barra superior alterna entre automático (segue o sistema), claro e escuro; a escolha fica salva no navegador.
-- **PLCopen XML (IEC 61131-3 TC6)** — exporta e importa programas em Ladder para intercâmbio com CODESYS, OpenPLC/Beremiz e outras IDEs IEC.
+- **Tema claro/escuro** - botão na barra superior alterna entre automático (segue o sistema), claro e escuro; a escolha fica salva no navegador.
+- **PLCopen XML (IEC 61131-3 TC6)** - exporta e importa programas em Ladder para intercâmbio com CODESYS, OpenPLC/Beremiz e outras IDEs IEC.
 - **Interface em português, inglês e espanhol.**
 - **Projetos** salvos no navegador (IndexedDB) + exportar/importar `.ladder.json`; **links compartilháveis** imutáveis (snapshot) que qualquer pessoa pode abrir, simular e copiar (fork).
 

@@ -1,6 +1,6 @@
 # ---- build the web app
 # Imagens fixadas por digest (atualizadas pelo Dependabot).
-FROM node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS build
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/core/package.json packages/core/
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime: Node runs the TypeScript sources directly (type stripping)
-FROM node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY package.json package-lock.json ./

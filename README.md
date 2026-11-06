@@ -1,6 +1,6 @@
-# LADDER IDE
+# LADDER-IDE
 
-Ambiente web aberto (sem login) para **treinar, testar e planejar** programas Ladder de CLPs industriais.
+Ambiente web aberto para **treinar, testar e planejar** programas Ladder de CLPs industriais.
 
 - **Editor visual de rungs** — paleta clicável/arrastável, ramificações em paralelo (OU), cópia/colagem, desfazer/refazer, comentários por rung, criação automática de tags.
 - **Simulador com ciclo de varredura real** — leitura de entradas → execução dos rungs em ordem → saídas; tempo simulado (0,1× a 10×), passo único, forçar tags, fluxo de energia animado. Roda num Web Worker.

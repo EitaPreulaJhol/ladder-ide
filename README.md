@@ -58,7 +58,8 @@ npm run dev              # web em http://localhost:5173 (proxy /api → :3000)
 ## Produção
 
 ```bash
-POSTGRES_PASSWORD=troque-me docker compose up -d --build
+POSTGRES_PASSWORD=troque-me
+docker compose up -d --build
 # http://localhost:3000
 ```
 
@@ -82,7 +83,7 @@ curl -X DELETE -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/
 
 ## Ponte Modbus TCP (IHM / SCADA real)
 
-Para ligar uma IHM ou SCADA de verdade à simulação que roda no navegador:
+Para ligar uma IHM ou SCADA de verdade à simulação que roda no navegador (no caso de self-hosting):
 
 ```bash
 npm run bridge                 # ou: node apps/bridge/src/index.ts [--modbus-port 5020] [--ws-port 8765] [--lan] [--origin URL]

@@ -5,5 +5,8 @@ test-results
 playwright-report
 *.log
 
+# Documentação de planejamento local (não versionada)
+docs/
+
 # Relatórios locais de pentest (Strix)
 strix_runs/

@@ -20,3 +20,8 @@ updates:
     groups:
       dev-tooling:
         dependency-type: development
+    ignore:
+      # O typescript-eslint ainda não suporta o TypeScript 7 (peer `typescript <6.1.0`).
+      # Remover quando uma versão dele aceitar o TS 7.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']

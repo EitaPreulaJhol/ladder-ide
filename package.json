@@ -35,7 +35,7 @@
     "vitest": "^5.1.0"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=26"
   },
   "overrides": {
     "minimatch": "^11.0.5",

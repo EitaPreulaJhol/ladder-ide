@@ -126,4 +126,3 @@ Os perfis ficam em `packages/core/src/families.ts`: CPUs (I/O embarcado, limite 
 - Antes do PR, rode `npm run check` e `npm run e2e`. A CI (`.github/workflows/ci.yml`) roda tudo isso, mais os testes com PostgreSQL e o build da imagem Docker.
 - Mensagens de commit em português, com um título curto e o detalhe no corpo.
 - Mudou o formato do projeto? Incremente `SCHEMA_VERSION` e adicione a migração em `packages/core/src/migrations.ts`.
-- O roteiro de melhorias está em [`docs/plans.md`](docs/plans.md).

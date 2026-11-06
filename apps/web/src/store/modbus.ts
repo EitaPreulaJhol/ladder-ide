@@ -90,7 +90,7 @@ export const useModbus = create<ModbusState>((set, get) => ({
       } else if (m.type === 'stats') {
         set({ requests: m.requests });
       } else if (m.type === 'error') {
-        set({ status: 'error', error: m.code === 'badToken' ? 'badToken' : String(m.code) });
+        set({ status: 'error', error: String(m.code) });
       }
     };
     socket.onerror = () => set({ status: 'error', error: 'unreachable' });

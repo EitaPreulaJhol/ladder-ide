@@ -47,7 +47,11 @@ export interface ReportedShare {
 }
 
 export interface ShareStore {
-  create(rec: NewShare): Promise<void>;
+  /**
+   * Inserts the share only if the total stored size stays within `limitBytes`.
+   * Check and insert are atomic (also across server replicas). False when full.
+   */
+  create(rec: NewShare, limitBytes: number): Promise<boolean>;
   get(id: string): Promise<ShareRecord | null>;
   /** Registers a report; hides the share once `hideAt` distinct reporters reported it. Null if not found. */
   report(input: ReportInput, hideAt: number): Promise<ReportResult | null>;
@@ -65,9 +69,12 @@ export class MemoryShareStore implements ShareStore {
   private map = new Map<string, ShareRecord>();
   private reports = new Map<string, (Omit<ReportInput, 'shareId'> & { createdAt: Date })[]>();
 
-  async create(rec: NewShare) {
+  async create(rec: NewShare, limitBytes: number) {
+    // No await between the check and the insert: atomic within the event loop.
     if (this.map.has(rec.id)) throw new Error('duplicate id');
+    if (this.sumBytes() + rec.sizeBytes > limitBytes) return false;
     this.map.set(rec.id, structuredClone({ ...rec, hidden: false, reportCount: 0 }));
+    return true;
   }
   async get(id: string) {
     const r = this.map.get(id);
@@ -121,10 +128,13 @@ export class MemoryShareStore implements ShareStore {
     }
     return true;
   }
-  async totalBytes() {
+  private sumBytes() {
     let n = 0;
     for (const s of this.map.values()) n += s.sizeBytes;
     return n;
+  }
+  async totalBytes() {
+    return this.sumBytes();
   }
   async deleteExpired(now: Date) {
     let n = 0;
@@ -138,6 +148,9 @@ export class MemoryShareStore implements ShareStore {
   }
   async close() {}
 }
+
+/** Advisory-lock key guarding the storage quota (arbitrary constant). */
+const SHARE_QUOTA_LOCK = 0x1add3;
 
 export class PgShareStore implements ShareStore {
   private db: NodePgDatabase;
@@ -154,15 +167,22 @@ export class PgShareStore implements ShareStore {
     return store;
   }
 
-  async create(rec: NewShare) {
-    await this.db.insert(shares).values({
-      id: rec.id,
-      title: rec.title,
-      schemaVersion: rec.project.schemaVersion,
-      project: rec.project,
-      createdAt: rec.createdAt,
-      sizeBytes: rec.sizeBytes,
-      expiresAt: rec.expiresAt,
+  async create(rec: NewShare, limitBytes: number) {
+    return this.db.transaction(async (tx) => {
+      // Serializes quota check + insert across connections and replicas (released on commit).
+      await tx.execute(sql`select pg_advisory_xact_lock(${SHARE_QUOTA_LOCK})`);
+      const [r] = await tx.select({ total: sql<string>`coalesce(sum(${shares.sizeBytes}), 0)` }).from(shares);
+      if (Number(r?.total ?? 0) + rec.sizeBytes > limitBytes) return false;
+      await tx.insert(shares).values({
+        id: rec.id,
+        title: rec.title,
+        schemaVersion: rec.project.schemaVersion,
+        project: rec.project,
+        createdAt: rec.createdAt,
+        sizeBytes: rec.sizeBytes,
+        expiresAt: rec.expiresAt,
+      });
+      return true;
     });
   }
 

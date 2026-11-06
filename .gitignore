@@ -4,3 +4,6 @@ dist
 test-results
 playwright-report
 *.log
+
+# Relatórios locais de pentest (Strix)
+strix_runs/

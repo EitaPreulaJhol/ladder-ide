@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import net from 'node:net';
 import WebSocket from 'ws';
-import { decode, encode, startBridge, type Bridge, type MapEntry } from '../src/bridge.ts';
+import { decode, encode, originAllowed, startBridge, type Bridge, type MapEntry } from '../src/bridge.ts';
 
 /** Tiny Modbus TCP client for tests. */
 class Client {
@@ -41,9 +41,10 @@ const u16 = (n: number) => [(n >> 8) & 0xff, n & 0xff];
 function ide(
   port: number,
   token: string,
+  origin?: string,
 ): Promise<{ ws: WebSocket; next: () => Promise<Record<string, unknown>> }> {
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`, origin ? { origin } : undefined);
     const queue: Record<string, unknown>[] = [];
     const waiters: ((m: Record<string, unknown>) => void)[] = [];
     ws.on('message', (raw) => {
@@ -140,6 +141,56 @@ describe('bridge', () => {
     bridge = await startBridge({ token: 'RIGHT', wsPort: 0, modbusPort: 0 });
     const { next } = await ide(bridge.wsPort, 'WRONG');
     expect(await next()).toEqual({ type: 'error', code: 'badToken' });
+  });
+
+  it('accepts browsers only from localhost or allowed origins', async () => {
+    const allowed = new Set(['https://ide.example.com']);
+    expect(originAllowed(undefined, allowed)).toBe(true);
+    expect(originAllowed('http://localhost:5173', allowed)).toBe(true);
+    expect(originAllowed('http://127.0.0.1:3000', allowed)).toBe(true);
+    expect(originAllowed('http://[::1]:3000', allowed)).toBe(true);
+    expect(originAllowed('https://IDE.example.com:443', allowed)).toBe(true);
+    expect(originAllowed('https://evil.example', allowed)).toBe(false);
+    expect(originAllowed('https://localhost.evil.example', allowed)).toBe(false);
+    expect(originAllowed('null', allowed)).toBe(false);
+
+    bridge = await startBridge({
+      token: 'T',
+      wsPort: 0,
+      modbusPort: 0,
+      origins: ['https://ide.example.com/'],
+    });
+    await expect(ide(bridge.wsPort, 'T', 'https://evil.example')).rejects.toThrow(/403/);
+    const { next } = await ide(bridge.wsPort, 'T', 'https://ide.example.com');
+    expect((await next()).type).toBe('welcome');
+  });
+
+  it('locks pairing after repeated wrong codes', async () => {
+    bridge = await startBridge({ token: 'RIGHT', wsPort: 0, modbusPort: 0, maxPairingFailures: 3 });
+    for (let i = 0; i < 3; i++)
+      expect(await (await ide(bridge.wsPort, 'WRONG')).next()).toEqual({ type: 'error', code: 'badToken' });
+    // Even the right code is refused while locked.
+    expect(await (await ide(bridge.wsPort, 'RIGHT')).next()).toEqual({
+      type: 'error',
+      code: 'tooManyAttempts',
+    });
+  });
+
+  it('pairs again once the lock expires; success resets the count', async () => {
+    bridge = await startBridge({
+      token: 'RIGHT',
+      wsPort: 0,
+      modbusPort: 0,
+      maxPairingFailures: 2,
+      pairingLockMs: 50,
+    });
+    for (let i = 0; i < 2; i++) await (await ide(bridge.wsPort, 'WRONG')).next();
+    await new Promise((r) => setTimeout(r, 120));
+    const ok = await ide(bridge.wsPort, 'RIGHT');
+    expect((await ok.next()).type).toBe('welcome');
+    ok.ws.close();
+    expect(await (await ide(bridge.wsPort, 'WRONG')).next()).toEqual({ type: 'error', code: 'badToken' });
+    expect((await (await ide(bridge.wsPort, 'RIGHT')).next()).type).toBe('welcome');
   });
 
   it('listens only on localhost by default', async () => {

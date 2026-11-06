@@ -26,7 +26,7 @@ import { getDialect } from './dialects.ts';
 import { tagAddress } from './hardware.ts';
 import { layoutRung } from './layout.ts';
 import { newId } from './ids.ts';
-import { formatTime, parseOperand } from './operand.ts';
+import { formatTime, isValidTagName, parseOperand } from './operand.ts';
 import { createElement, forEachElement, newRung } from './edit.ts';
 import { createProject } from './project.ts';
 import {
@@ -505,7 +505,14 @@ function parseTypeEl(typeEl: XmlElement | undefined): { type: DataType | null; d
   return { type: map[t.name.toUpperCase()] ?? null, derived: t.name };
 }
 
+/** Largest PLCopen file accepted for import (characters). */
+export const MAX_PLCOPEN_CHARS = 16 * 1024 * 1024;
+/** Longest series path followed in an LD network (guards the recursive graph walk). */
+const MAX_SERIES = 1000;
+
 export function importPlcopen(xml: string): PlcopenImport {
+  if (xml.length > MAX_PLCOPEN_CHARS)
+    throw new Error(`Arquivo PLCopen grande demais (máximo ${MAX_PLCOPEN_CHARS / 1024 / 1024} MB).`);
   const warnings: string[] = [];
   const root = parseXml(xml);
   if (root.name !== 'project')
@@ -524,6 +531,10 @@ export function importPlcopen(xml: string): PlcopenImport {
     const name = v.attrs.name;
     if (!name || seen.has(name) || !child(v, 'type')) continue;
     seen.add(name);
+    if (!isValidTagName(name)) {
+      warnings.push(`Variável ${JSON.stringify(name.slice(0, 64))}: nome inválido (ignorada).`);
+      continue;
+    }
     const { type, derived } = parseTypeEl(child(v, 'type'));
     if (!type) {
       if (!['SR', 'RS'].includes(derived ?? ''))
@@ -733,6 +744,8 @@ function importLd(ld: XmlElement, pouNames: Set<string>, warnings: string[], pou
         continue;
       }
       if (!isPower(n) || visiting.has(n.id)) continue;
+      if (visiting.size >= MAX_SERIES)
+        throw new Error(`${pouName}: caminho em série com mais de ${MAX_SERIES} elementos.`);
       visiting.add(n.id);
       paths.push([...seriesFor(powerRefs(n)), toElement(n)]);
       visiting.delete(n.id);

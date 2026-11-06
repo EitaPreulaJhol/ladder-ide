@@ -26,11 +26,23 @@ if (!process.env.HASH_SALT)
     '[ladder] HASH_SALT não definido: denúncias de uma mesma pessoa só são agrupadas até o servidor reiniciar.',
   );
 
+// X-Forwarded-For só é aceito de proxies conhecidos (IPs/CIDRs ou 'loopback', 'uniquelocal'...).
+const trustedProxies = (process.env.TRUSTED_PROXIES ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const trustProxy = trustedProxies.length ? trustedProxies : process.env.TRUST_PROXY === '1';
+if (trustProxy === true)
+  console.warn(
+    '[ladder] TRUST_PROXY=1 aceita X-Forwarded-For de qualquer origem (permite burlar o rate limit e as denúncias). ' +
+      'Prefira TRUSTED_PROXIES com o IP/CIDR do proxy reverso.',
+  );
+
 const app = await buildApp({
   store,
   staticDir,
   logger: true,
-  trustProxy: process.env.TRUST_PROXY === '1',
+  trustProxy,
   adminToken: adminToken && adminToken.length >= 24 ? adminToken : undefined,
   hashSalt: process.env.HASH_SALT || undefined,
   storageLimitBytes: process.env.STORAGE_LIMIT_MB

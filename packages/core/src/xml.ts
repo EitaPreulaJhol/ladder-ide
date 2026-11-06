@@ -22,6 +22,9 @@ function decode(s: string): string {
 
 const local = (n: string) => n.slice(n.indexOf(':') + 1);
 
+/** Nesting limit: real PLCopen files stay far below; deeper documents are rejected, not walked. */
+export const MAX_XML_DEPTH = 256;
+
 export function parseXml(src: string): XmlElement {
   const root: XmlElement = { name: '#root', attrs: {}, children: [], text: '' };
   const stack: XmlElement[] = [root];
@@ -70,7 +73,11 @@ export function parseXml(src: string): XmlElement {
       let a: RegExpExecArray | null;
       while ((a = attrRe.exec(body.slice(m[1]!.length)))) el.attrs[local(a[1]!)] = decode(a[3] ?? a[4] ?? '');
       stack[stack.length - 1]!.children.push(el);
-      if (!selfClose) stack.push(el);
+      if (!selfClose) {
+        if (stack.length > MAX_XML_DEPTH)
+          throw new Error(`XML: aninhamento maior que ${MAX_XML_DEPTH} níveis`);
+        stack.push(el);
+      }
       i = j + 1;
     }
   }
@@ -84,16 +91,15 @@ export const child = (el: XmlElement | undefined, name: string) => el?.children.
 export const children = (el: XmlElement | undefined, name: string) =>
   el?.children.filter((c) => c.name === name) ?? [];
 
-/** Depth-first search for descendants with this local name. */
+/** Depth-first search (document order) for descendants with this local name. Iterative: no stack overflow. */
 export function descendants(el: XmlElement, name: string): XmlElement[] {
   const out: XmlElement[] = [];
-  const walk = (e: XmlElement) => {
-    for (const c of e.children) {
-      if (c.name === name) out.push(c);
-      walk(c);
-    }
-  };
-  walk(el);
+  const stack = [...el.children].reverse();
+  while (stack.length) {
+    const c = stack.pop()!;
+    if (c.name === name) out.push(c);
+    for (let i = c.children.length - 1; i >= 0; i--) stack.push(c.children[i]!);
+  }
   return out;
 }
 

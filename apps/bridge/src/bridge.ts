@@ -4,6 +4,8 @@
  * Security model:
  *  - the WebSocket listens on 127.0.0.1 only and requires the pairing token
  *    printed in the terminal (a random web page cannot drive the bridge);
+ *  - browsers are only accepted from localhost or the origins given with --origin;
+ *  - repeated wrong pairing codes lock pairing for a while (no brute force);
  *  - Modbus listens on 127.0.0.1 unless --lan is given;
  *  - only mapped coils / holding registers accept writes.
  */
@@ -27,6 +29,12 @@ export interface BridgeOptions {
   modbusPort: number;
   /** Bind Modbus on all interfaces (other machines on the network can connect). */
   lan?: boolean;
+  /** Extra browser origins allowed besides localhost (e.g. the hosted IDE, `https://ladder.example.com`). */
+  origins?: string[];
+  /** Wrong pairing codes in a row before pairing is locked (default 5). */
+  maxPairingFailures?: number;
+  /** First lockout; doubles on each further failure, up to 15 minutes (default 30 s). */
+  pairingLockMs?: number;
   log?: (msg: string) => void;
 }
 
@@ -46,6 +54,30 @@ const sameToken = (a: string, b: string) => {
   const y = Buffer.from(b);
   return x.length === y.length && timingSafeEqual(x, y);
 };
+
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+const MAX_LOCK_MS = 15 * 60_000;
+
+/** Normalizes an origin (`https://Host:443/` -> `https://host`); null when it is not a valid http(s) origin. */
+export function normalizeOrigin(o: string): string | null {
+  try {
+    const u = new URL(o);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.origin : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Browsers always send Origin on WebSocket handshakes: only localhost pages and explicitly allowed
+ * origins may connect. No Origin = not a browser (a local program, which can reach localhost anyway).
+ */
+export function originAllowed(origin: string | undefined, allowed: ReadonlySet<string>): boolean {
+  if (origin === undefined) return true;
+  const o = normalizeOrigin(origin);
+  if (!o) return false;
+  return LOCAL_HOSTS.has(new URL(o).hostname) || allowed.has(o);
+}
 
 /** Tag value -> registers (DINT/REAL: high word first). */
 export function encode(type: TagType, value: number): number[] {
@@ -131,7 +163,19 @@ export async function startBridge(opts: BridgeOptions): Promise<Bridge> {
   });
   const modbusPort = (modbus.address() as AddressInfo).port;
 
-  const wss = new WebSocketServer({ host: '127.0.0.1', port: opts.wsPort, maxPayload: 1024 * 1024 });
+  const allowedOrigins = new Set(
+    (opts.origins ?? []).map(normalizeOrigin).filter((o): o is string => o !== null),
+  );
+  const wss = new WebSocketServer({
+    host: '127.0.0.1',
+    port: opts.wsPort,
+    maxPayload: 1024 * 1024,
+    verifyClient: ({ origin }: { origin?: string }, done: (ok: boolean, code?: number) => void) => {
+      if (originAllowed(origin, allowedOrigins)) return done(true);
+      log(`Conexão recusada da origem ${origin} (use --origin para autorizá-la).`);
+      done(false, 403);
+    },
+  });
   await new Promise<void>((resolve, reject) => {
     wss.once('listening', () => resolve());
     wss.once('error', reject);
@@ -142,6 +186,12 @@ export async function startBridge(opts: BridgeOptions): Promise<Bridge> {
     client?.send(JSON.stringify({ type: 'stats', requests }));
   }, 1000);
   stats.unref();
+
+  // Pairing brute-force guard: global, since every client of this socket is local.
+  const maxFailures = opts.maxPairingFailures ?? 5;
+  const baseLockMs = opts.pairingLockMs ?? 30_000;
+  let failures = 0;
+  let lockedUntil = 0;
 
   wss.on('connection', (ws) => {
     let paired = false;
@@ -154,11 +204,25 @@ export async function startBridge(opts: BridgeOptions): Promise<Bridge> {
         return;
       }
       if (!paired) {
+        if (Date.now() < lockedUntil) {
+          ws.send(JSON.stringify({ type: 'error', code: 'tooManyAttempts' }));
+          ws.close(4029, 'too many attempts');
+          return;
+        }
         if (msg.type !== 'hello' || typeof msg.token !== 'string' || !sameToken(msg.token, opts.token)) {
+          failures++;
+          if (failures >= maxFailures) {
+            const lockMs = Math.min(baseLockMs * 2 ** (failures - maxFailures), MAX_LOCK_MS);
+            lockedUntil = Date.now() + lockMs;
+            log(
+              `${failures} códigos de pareamento errados: pareamento bloqueado por ${Math.ceil(lockMs / 1000)} s.`,
+            );
+          }
           ws.send(JSON.stringify({ type: 'error', code: 'badToken' }));
           ws.close(4003, 'bad token');
           return;
         }
+        failures = 0;
         paired = true;
         clearTimeout(timer);
         if (client && client !== ws) client.close(4000, 'replaced');

@@ -6,6 +6,11 @@ import { activeMap, useModbus } from '../store/modbus.ts';
 
 const AREAS: ModbusArea[] = ['coil', 'discrete', 'holding', 'input'];
 
+/** The bridge accepts localhost pages; any other origin (hosted IDE) must be authorized with --origin. */
+const LOCAL = ['localhost', '127.0.0.1', '[::1]'];
+const BRIDGE_CMD =
+  'node apps/bridge/src/index.ts' + (LOCAL.includes(location.hostname) ? '' : ` --origin ${location.origin}`);
+
 export function ModbusPanel() {
   const { t } = useTranslation();
   const project = useProject((s) => s.project);
@@ -23,7 +28,7 @@ export function ModbusPanel() {
     <section className="card modbus no-print" data-testid="modbus">
       <h3>{t('modbus.title')}</h3>
       <p className="muted small">{t('modbus.help')}</p>
-      <pre className="modbus-cmd">node apps/bridge/src/index.ts</pre>
+      <pre className="modbus-cmd">{BRIDGE_CMD}</pre>
       <p className="muted small">{t('modbus.security')}</p>
 
       <div className="row modbus-connect">
@@ -66,7 +71,7 @@ export function ModbusPanel() {
       </div>
       {status === 'error' && (
         <p className="error-text small">
-          {t(error === 'badToken' ? 'modbus.badToken' : 'modbus.unreachable')}
+          {t(error === 'badToken' || error === 'tooManyAttempts' ? `modbus.${error}` : 'modbus.unreachable')}
         </p>
       )}
 

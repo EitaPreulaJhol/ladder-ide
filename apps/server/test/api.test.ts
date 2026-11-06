@@ -145,6 +145,52 @@ for (const [name, makeStore] of stores) {
       expect((await admin('DELETE', `/api/admin/shares/${id}`)).statusCode).toBe(404);
     });
 
+    it('concurrent creations cannot overshoot the storage limit', async () => {
+      const project = createProject();
+      const size = Buffer.byteLength(JSON.stringify(project));
+      const before = await store.totalBytes();
+      const limited = await buildApp({
+        store,
+        storageLimitBytes: before + size,
+        shareRateLimit: 1000,
+        cleanupIntervalMs: 0,
+      });
+      const res = await Promise.all(
+        Array.from({ length: 10 }, () =>
+          limited.inject({ method: 'POST', url: '/api/shares', payload: { project } }),
+        ),
+      );
+      expect(res.filter((r) => r.statusCode === 201)).toHaveLength(1);
+      expect(res.filter((r) => r.statusCode === 507)).toHaveLength(9);
+      expect(await store.totalBytes()).toBe(before + size);
+      await limited.close();
+    });
+
+    it('store quota check and insert are atomic under parallel transactions', async () => {
+      // Straight to the store: HTTP parsing staggers requests and hides the race on a fast database.
+      const project = createProject();
+      // Opens several pool connections first, so the transactions below really run in parallel.
+      await Promise.all(Array.from({ length: 8 }, () => store.totalBytes()));
+      const before = await store.totalBytes();
+      const results = await Promise.all(
+        Array.from({ length: 8 }, (_, i) =>
+          store.create(
+            {
+              id: `race${Date.now().toString(36)}${i}`,
+              title: 'race',
+              project,
+              createdAt: new Date(),
+              sizeBytes: 1000,
+              expiresAt: null,
+            },
+            before + 1000,
+          ),
+        ),
+      );
+      expect(results.filter(Boolean)).toHaveLength(1);
+      expect(await store.totalBytes()).toBe(before + 1000);
+    });
+
     it('sends security headers', async () => {
       const res = await app.inject({ method: 'GET', url: '/api/health' });
       expect(res.headers['content-security-policy']).toBe(CSP);
@@ -179,6 +225,65 @@ describe('limits and configuration', () => {
     const full = await post();
     expect(full.statusCode).toBe(507);
     expect(full.json().error).toBe('storageFull');
+    await app.close();
+  });
+
+  it('X-Forwarded-For is only honored from trusted proxies', async () => {
+    const app = await buildApp({
+      store: new MemoryShareStore(),
+      trustProxy: ['10.0.0.1'],
+      shareRateLimit: 1000,
+      cleanupIntervalMs: 0,
+    });
+    const { id } = (
+      await app.inject({ method: 'POST', url: '/api/shares', payload: { project: createProject() } })
+    ).json();
+    const report = (xff: string, remoteAddress: string) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/shares/${id}/report`,
+        payload: { reason: 'spam' },
+        headers: { 'x-forwarded-for': xff },
+        remoteAddress,
+      });
+    // Spoofed header straight from a client: all reports count as one person.
+    for (const xff of ['1.1.1.1', '2.2.2.2', '3.3.3.3']) await report(xff, '9.9.9.9');
+    expect((await app.inject({ method: 'GET', url: `/api/shares/${id}` })).statusCode).toBe(200);
+    // Through the trusted proxy the forwarded client IP is used.
+    for (const xff of ['4.4.4.4', '5.5.5.5']) await report(xff, '10.0.0.1');
+    expect((await app.inject({ method: 'GET', url: `/api/shares/${id}` })).statusCode).toBe(410);
+    await app.close();
+  });
+
+  it('throttles admin requests, failed logins included', async () => {
+    const app = await buildApp({
+      store: new MemoryShareStore(),
+      adminToken: ADMIN,
+      adminRateLimit: 3,
+      cleanupIntervalMs: 0,
+    });
+    const codes = [];
+    for (let i = 0; i < 4; i++)
+      codes.push(
+        (
+          await app.inject({
+            method: 'GET',
+            url: '/api/admin/reports',
+            headers: { authorization: 'Bearer wrong-token' },
+          })
+        ).statusCode,
+      );
+    expect(codes).toEqual([401, 401, 401, 429]);
+    await app.close();
+  });
+
+  it('strips invisible characters from shared titles', async () => {
+    const store = new MemoryShareStore();
+    const app = await buildApp({ store, cleanupIntervalMs: 0 });
+    const project = createProject();
+    project.meta.name = 'Aula\u202E\u200B 1\u0007';
+    const { id } = (await app.inject({ method: 'POST', url: '/api/shares', payload: { project } })).json();
+    expect((await store.get(id))!.title).toBe('Aula 1');
     await app.close();
   });
 

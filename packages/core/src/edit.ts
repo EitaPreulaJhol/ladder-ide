@@ -4,7 +4,7 @@
  * normalized: no single-branch parallels, no parallels made only of shorts.
  */
 import type { Element, InstructionId, LadderNode, Parallel, Project, Rung, Series } from './model.ts';
-import { parseOperand } from './operand.ts';
+import { escapeRegExp, parseOperand } from './operand.ts';
 import { defaultOperands } from './instructions.ts';
 import { newId } from './ids.ts';
 
@@ -196,10 +196,10 @@ export function renameTag(project: Project, from: string, to: string): void {
   for (const e of project.modbus?.map ?? []) if (e.tag === from) e.tag = to;
   if (project.trend) project.trend = project.trend.map((s) => renameOperand(s, from, to));
   // GRAFCET actions are tag names; conditions are expressions (`A0 & !B1`, `T#2s`).
-  const word = new RegExp(`(?<![A-Za-z0-9_#.])${from}(?![A-Za-z0-9_#])`, 'g');
+  const word = new RegExp(`(?<![A-Za-z0-9_#.])${escapeRegExp(from)}(?![A-Za-z0-9_#])`, 'g');
   for (const g of project.grafcets ?? []) {
     for (const st of g.steps) st.actions = st.actions.map((a) => (a === from ? to : a));
-    for (const tr of g.transitions) tr.condition = tr.condition.replace(word, to);
+    for (const tr of g.transitions) tr.condition = tr.condition.replace(word, () => to);
   }
   for (const c of project.plant?.components ?? [])
     for (const [port, tag] of Object.entries(c.tags)) if (tag === from) c.tags[port] = to;

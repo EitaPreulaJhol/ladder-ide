@@ -42,6 +42,11 @@ export function isValidTagName(name: string): boolean {
   return IDENT.test(name);
 }
 
+/** Escapes regex metacharacters so `s` matches literally inside `new RegExp(...)`. */
+export function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+}
+
 /**
  * Parses an IEC time literal or a plain duration and returns milliseconds.
  * Accepts `T#5s`, `TIME#1m30s`, `T#250ms`, `5s`, `1.5s`, `500ms`, `2m`, `1h`.

@@ -51,7 +51,10 @@ export function ProjectsView() {
       if (text.trimStart().startsWith('<')) {
         // PLCopen XML (TC6) from another IEC 61131-3 tool.
         const { project: imported, warnings } = importPlcopen(text);
-        await open(imported);
+        // Same invariants as a JSON import (tag names, limits) before it reaches the editor.
+        const r = parseProject(imported);
+        if (!r.ok) throw new Error(r.error);
+        await open(r.project);
         setImportWarnings(warnings);
       } else {
         const r = parseProject(JSON.parse(text));

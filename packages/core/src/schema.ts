@@ -9,6 +9,14 @@ import { COMPONENT_KINDS } from './plant/components.ts';
 const id = z.string().min(1).max(64);
 const text = (max: number) => z.string().max(max);
 
+/**
+ * Control, zero-width and bidirectional-override characters: invisible, and in a shared title they
+ * can disguise what a link is (`\u202E` reverses the text that follows).
+ */
+// eslint-disable-next-line no-control-regex -- matching control characters is the point
+const INVISIBLE = /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/g;
+export const cleanTitle = (s: string): string => s.replace(INVISIBLE, '').trim();
+
 const AddressSchema = z.object({
   area: z.enum(['I', 'Q', 'M', 'T', 'C']),
   index: z.number().int().min(0).max(65535),
@@ -143,7 +151,7 @@ export const ProjectSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   id,
   meta: z.object({
-    name: text(200),
+    name: text(200).transform(cleanTitle),
     description: text(5000).optional(),
     createdAt: text(40),
     updatedAt: text(40),

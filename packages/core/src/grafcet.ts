@@ -13,7 +13,7 @@ import type { Grafcet, LadderNode, Project, Rung, Series, Tag } from './model.ts
 import { coil, el, nc, no, par, reset, rung, set } from './build.ts';
 import { newId } from './ids.ts';
 import { forEachElement } from './edit.ts';
-import { formatTime, isValidTagName, parseOperand, parseTime } from './operand.ts';
+import { escapeRegExp, formatTime, isValidTagName, parseOperand, parseTime } from './operand.ts';
 
 export type ConditionLiteral =
   { kind: 'tag'; operand: string; negated: boolean } | { kind: 'time'; ms: number } | { kind: 'true' };
@@ -173,7 +173,7 @@ export function syncGrafcet(project: Project, grafcetId: string): void {
           if (p.kind === 'tag') used.add(p.name);
         }),
       );
-  const own = new RegExp(`^${g.prefix}[XT]\\d+$`);
+  const own = new RegExp(`^${escapeRegExp(g.prefix)}[XT]\\d+$`);
   project.tags = project.tags.filter((t) => !own.test(t.name) || used.has(t.name));
 }
 

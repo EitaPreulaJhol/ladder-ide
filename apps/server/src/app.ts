@@ -12,11 +12,13 @@ export interface AppOptions {
   /** Built web app to serve (apps/web/dist). */
   staticDir?: string;
   logger?: boolean;
-  trustProxy?: boolean;
+  trustProxy?: boolean | string | string[];
   /** POST /api/shares per IP per minute. */
   shareRateLimit?: number;
   /** Enables /api/admin/* (Bearer token). Without it, the admin routes do not exist. */
   adminToken?: string;
+  /** /api/admin/* requests per IP per minute (including failed logins). */
+  adminRateLimit?: number;
   /** Secret mixed into reporter hashes. Random per process when not given. */
   hashSalt?: string;
   /** Total size of all shared projects. */
@@ -104,21 +106,18 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       const sizeBytes = Buffer.byteLength(JSON.stringify(project));
       if (sizeBytes > MAX_PROJECT_BYTES)
         return reply.code(413).send({ error: 'tooLarge', message: 'Projeto grande demais.' });
-      if ((await store.totalBytes()) + sizeBytes > storageLimit)
+      const created = now();
+      const expiresAt = typeof days === 'number' ? new Date(created.getTime() + days * DAY_MS) : null;
+      const id = newShareId();
+      // Quota check + insert are atomic in the store (no TOCTOU between concurrent creations).
+      const stored = await store.create(
+        { id, title: project.meta.name.slice(0, 200), project, createdAt: created, sizeBytes, expiresAt },
+        storageLimit,
+      );
+      if (!stored)
         return reply
           .code(507)
           .send({ error: 'storageFull', message: 'Armazenamento de links cheio. Tente mais tarde.' });
-      const id = newShareId();
-      const created = now();
-      const expiresAt = typeof days === 'number' ? new Date(created.getTime() + days * DAY_MS) : null;
-      await store.create({
-        id,
-        title: project.meta.name.slice(0, 200),
-        project,
-        createdAt: created,
-        sizeBytes,
-        expiresAt,
-      });
       return reply.code(201).send({ id, expiresAt: expiresAt?.toISOString() ?? null });
     },
   );
@@ -175,6 +174,8 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   if (opts.adminToken) {
     const token = opts.adminToken;
     await app.register(async (admin) => {
+      // Counted before auth, so wrong tokens are throttled too (defense in depth: the token is long).
+      admin.addHook('onRequest', admin.rateLimit({ max: opts.adminRateLimit ?? 30, timeWindow: '1 minute' }));
       admin.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
         const auth = req.headers.authorization ?? '';
         const given = auth.startsWith('Bearer ') ? auth.slice(7) : '';

@@ -62,7 +62,7 @@ POSTGRES_PASSWORD=troque-me docker compose up -d --build
 # http://localhost:3000
 ```
 
-Atrás de um proxy reverso, defina `TRUST_PROXY=1` para o limite de requisições usar o IP real do cliente.
+Atrás de um proxy reverso, defina `TRUSTED_PROXIES` com o IP/CIDR do proxy (ex.: `172.16.0.0/12` ou `uniquelocal`) para o limite de requisições e as denúncias usarem o IP real do cliente. O proxy deve sobrescrever o `X-Forwarded-For` enviado pelo cliente. `TRUST_PROXY=1` ainda funciona, mas confia no cabeçalho vindo de qualquer origem: qualquer pessoa que alcance o servidor diretamente pode forjar IPs.
 
 ## Proteção e administração
 
@@ -70,7 +70,7 @@ Atrás de um proxy reverso, defina `TRUST_PROXY=1` para o limite de requisiçõe
 - **Validade opcional** (1, 7, 30 ou 90 dias) escolhida ao compartilhar; links vencidos são apagados a cada hora.
 - **Limite total** de armazenamento dos links (`STORAGE_LIMIT_MB`, padrão 512).
 - **Cabeçalhos de segurança:** Content-Security-Policy restrita à própria origem, `X-Frame-Options: DENY`, `Permissions-Policy` e, com `HSTS=1`, `Strict-Transport-Security`.
-- **Administração:** defina `ADMIN_TOKEN` (24+ caracteres aleatórios). Sem ele, as rotas de administração não existem.
+- **Administração:** defina `ADMIN_TOKEN` (24+ caracteres aleatórios). Sem ele, as rotas de administração não existem. Cada IP pode fazer até 30 requisições por minuto nessas rotas, contando tentativas com token errado.
 
 ```bash
 TOKEN=...   # o mesmo ADMIN_TOKEN do servidor
@@ -85,12 +85,14 @@ curl -X DELETE -H "Authorization: Bearer $TOKEN" https://seu-servidor/api/admin/
 Para ligar uma IHM ou SCADA de verdade à simulação que roda no navegador:
 
 ```bash
-npm run bridge                 # ou: node apps/bridge/src/index.ts [--modbus-port 5020] [--ws-port 8765] [--lan]
+npm run bridge                 # ou: node apps/bridge/src/index.ts [--modbus-port 5020] [--ws-port 8765] [--lan] [--origin URL]
 ```
 
 A ponte mostra um **código de pareamento**. Na IDE, abra Hardware → Ponte Modbus TCP, informe a porta (8765) e o código, e conecte. A IHM então acessa o Modbus TCP da ponte (porta 5020): bits em coils, números em holding registers (mapa automático ou personalizado; DINT/REAL em 2 registradores, palavra alta primeiro).
 
 - **Segurança:** o WebSocket só escuta em `127.0.0.1` e exige o código; o Modbus escuta só em localhost, a menos que se use `--lan`. Modbus não tem autenticação, então use `--lan` só em rede de laboratório.
+- **Origem da página:** a ponte só aceita a IDE aberta em `localhost`. Se a IDE estiver hospedada num servidor, autorize o endereço dela com `--origin https://seu-servidor` (repetível, ou `LADDER_BRIDGE_ORIGINS=a,b`). O painel da ponte na IDE já mostra o comando com a origem correta.
+- **Código errado:** depois de 5 códigos errados seguidos, o pareamento fica bloqueado por 30 s (o tempo dobra a cada novo erro, até 15 min).
 
 ## API
 

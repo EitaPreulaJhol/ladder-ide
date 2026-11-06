@@ -37,7 +37,7 @@ O núcleo não tem dependência de interface: o mesmo código roda no navegador 
 
 ## Desenvolvimento
 
-Requisitos: Node ≥ 24 e (opcional) Docker para o PostgreSQL.
+Requisitos: Node ≥ 26 e (opcional) Docker para o PostgreSQL.
 
 ```bash
 npm install

@@ -70,195 +70,204 @@ export function TagsView() {
         </button>
       </div>
       <p className="muted small">{t('tags.help')}</p>
-      <table className="grid tags-table">
-        <thead>
-          <tr>
-            <th>{t('tags.name')}</th>
-            <th>{t('tags.type')}</th>
-            <th>{t('tags.io')}</th>
-            <th>{t('tags.address')}</th>
-            <th>{t('tags.initial')}</th>
-            <th>{t('tags.comment')}</th>
-            <th>{t('tags.inUse')}</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {project.tags.map((tg) => (
-            <Fragment key={tg.name}>
-              <tr>
-                <td>
-                  <input
-                    className="mono"
-                    defaultValue={tg.name}
-                    readOnly={readOnly}
-                    key={tg.name}
-                    aria-label={t('tags.name')}
-                    onChange={(e) => {
-                      // Flag the problem while typing; the name is only refused on leaving the field.
-                      const problem = nameProblem(e.target.value.trim(), tg.name);
-                      e.target.setAttribute('aria-invalid', String(!!problem));
-                      e.target.title = problem ?? '';
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                    onBlur={(e) => {
-                      const v = e.target.value.trim();
-                      e.target.removeAttribute('aria-invalid');
-                      e.target.title = '';
-                      if (v === tg.name) return;
-                      const problem = nameProblem(v, tg.name);
-                      if (problem) {
-                        toast(problem, { kind: 'error', detail: t('tags.nameKept', { name: tg.name }) });
-                        e.target.value = tg.name;
-                        return;
-                      }
-                      update((d) => renameTag(d, tg.name, v));
-                    }}
-                  />
-                </td>
-                <td>
-                  <select
-                    value={tg.type}
-                    disabled={readOnly}
-                    onChange={(e) =>
-                      edit(tg.name, (x) => {
-                        x.type = e.target.value as DataType;
-                        delete x.initial;
-                      })
-                    }
-                  >
-                    {TYPES.map((ty) => (
-                      <option key={ty}>{ty}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  {(tg.type === 'BOOL' || tg.type === 'INT') && (
+      {/* Narrow containers turn each row into two aligned lines (see .tags-wrap in styles.css). */}
+      <div className="tags-wrap">
+        <table className="grid tags-table">
+          <thead>
+            <tr className="tag-row">
+              <th className="c-name">{t('tags.name')}</th>
+              <th className="c-type">{t('tags.type')}</th>
+              <th className="c-io">{t('tags.io')}</th>
+              <th className="c-addr">{t('tags.address')}</th>
+              <th className="c-init">{t('tags.initial')}</th>
+              <th className="c-desc">{t('tags.comment')}</th>
+              <th className="c-use">{t('tags.inUse')}</th>
+              <th className="c-del" />
+            </tr>
+          </thead>
+          <tbody>
+            {project.tags.map((tg) => (
+              <Fragment key={tg.name}>
+                <tr className="tag-row">
+                  <td className="c-name">
+                    <input
+                      className="mono"
+                      defaultValue={tg.name}
+                      readOnly={readOnly}
+                      key={tg.name}
+                      aria-label={t('tags.name')}
+                      onChange={(e) => {
+                        // Flag the problem while typing; the name is only refused on leaving the field.
+                        const problem = nameProblem(e.target.value.trim(), tg.name);
+                        e.target.setAttribute('aria-invalid', String(!!problem));
+                        e.target.title = problem ?? '';
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        e.target.removeAttribute('aria-invalid');
+                        e.target.title = '';
+                        if (v === tg.name) return;
+                        const problem = nameProblem(v, tg.name);
+                        if (problem) {
+                          toast(problem, { kind: 'error', detail: t('tags.nameKept', { name: tg.name }) });
+                          e.target.value = tg.name;
+                          return;
+                        }
+                        update((d) => renameTag(d, tg.name, v));
+                      }}
+                    />
+                  </td>
+                  <td className="c-type">
                     <select
+                      value={tg.type}
+                      aria-label={t('tags.type')}
                       disabled={readOnly}
-                      value={tg.io ? `${tg.io.module}:${tg.io.channel}` : ''}
                       onChange={(e) =>
                         edit(tg.name, (x) => {
-                          if (!e.target.value) delete x.io;
-                          else {
-                            const [module, ch] = e.target.value.split(':');
-                            x.io = { module: module!, channel: Number(ch) };
-                            delete x.address;
-                          }
+                          x.type = e.target.value as DataType;
+                          delete x.initial;
                         })
                       }
                     >
-                      <option value="">{t('tags.noIo')}</option>
-                      {rows
-                        .filter((r) =>
-                          tg.type === 'BOOL'
-                            ? r.kind === 'DI' || r.kind === 'DO'
-                            : r.kind === 'AI' || r.kind === 'AO',
-                        )
-                        .filter((r) => !r.tag || r.tag.name === tg.name)
-                        .map((r) => (
-                          <option key={`${r.moduleId}:${r.channel}`} value={`${r.moduleId}:${r.channel}`}>
-                            {channelAddress(project.hardware, r.moduleId, r.channel, project.dialect)} —{' '}
-                            {r.kind} slot {r.slot} ch {r.channel}
-                          </option>
-                        ))}
+                      {TYPES.map((ty) => (
+                        <option key={ty}>{ty}</option>
+                      ))}
                     </select>
-                  )}
-                </td>
-                <td>
-                  {tg.io ? (
-                    <span className="mono muted">{tagAddress(tg, project)}</span>
-                  ) : (
-                    <input
-                      className="mono"
-                      key={`${tg.name}-${project.dialect}-${tagAddress(tg, project)}`}
-                      defaultValue={tagAddress(tg, project)}
-                      placeholder={EXAMPLE_ADDR[project.dialect]}
-                      title={t('tags.addressHint', { example: EXAMPLE_ADDR[project.dialect] })}
-                      readOnly={readOnly}
-                      onBlur={(e) => {
-                        const v = e.target.value.trim();
-                        if (v === tagAddress(tg, project)) return;
-                        if (!v) return edit(tg.name, (x) => delete x.address);
-                        const parsed = getDialect(project.dialect).parseAddress(v);
-                        if (!parsed) {
-                          toast(t('tags.invalidAddress', { dialect: getDialect(project.dialect).name }), {
-                            kind: 'error',
-                            detail: t('tags.addressHint', { example: EXAMPLE_ADDR[project.dialect] }),
-                          });
-                          e.target.value = tagAddress(tg, project);
-                          return;
+                  </td>
+                  <td className="c-io">
+                    {(tg.type === 'BOOL' || tg.type === 'INT') && (
+                      <select
+                        disabled={readOnly}
+                        aria-label={t('tags.io')}
+                        value={tg.io ? `${tg.io.module}:${tg.io.channel}` : ''}
+                        onChange={(e) =>
+                          edit(tg.name, (x) => {
+                            if (!e.target.value) delete x.io;
+                            else {
+                              const [module, ch] = e.target.value.split(':');
+                              x.io = { module: module!, channel: Number(ch) };
+                              delete x.address;
+                            }
+                          })
                         }
-                        edit(tg.name, (x) => (x.address = parsed.address));
-                      }}
-                    />
-                  )}
-                </td>
-                <td>
-                  {tg.type === 'BOOL' ? (
+                      >
+                        <option value="">{t('tags.noIo')}</option>
+                        {rows
+                          .filter((r) =>
+                            tg.type === 'BOOL'
+                              ? r.kind === 'DI' || r.kind === 'DO'
+                              : r.kind === 'AI' || r.kind === 'AO',
+                          )
+                          .filter((r) => !r.tag || r.tag.name === tg.name)
+                          .map((r) => (
+                            <option key={`${r.moduleId}:${r.channel}`} value={`${r.moduleId}:${r.channel}`}>
+                              {channelAddress(project.hardware, r.moduleId, r.channel, project.dialect)} —{' '}
+                              {r.kind} slot {r.slot} ch {r.channel}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                  </td>
+                  <td className="c-addr">
+                    {tg.io ? (
+                      <span className="mono muted">{tagAddress(tg, project)}</span>
+                    ) : (
+                      <input
+                        className="mono"
+                        key={`${tg.name}-${project.dialect}-${tagAddress(tg, project)}`}
+                        defaultValue={tagAddress(tg, project)}
+                        placeholder={EXAMPLE_ADDR[project.dialect]}
+                        aria-label={t('tags.address')}
+                        title={t('tags.addressHint', { example: EXAMPLE_ADDR[project.dialect] })}
+                        readOnly={readOnly}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim();
+                          if (v === tagAddress(tg, project)) return;
+                          if (!v) return edit(tg.name, (x) => delete x.address);
+                          const parsed = getDialect(project.dialect).parseAddress(v);
+                          if (!parsed) {
+                            toast(t('tags.invalidAddress', { dialect: getDialect(project.dialect).name }), {
+                              kind: 'error',
+                              detail: t('tags.addressHint', { example: EXAMPLE_ADDR[project.dialect] }),
+                            });
+                            e.target.value = tagAddress(tg, project);
+                            return;
+                          }
+                          edit(tg.name, (x) => (x.address = parsed.address));
+                        }}
+                      />
+                    )}
+                  </td>
+                  <td className="c-init">
+                    {tg.type === 'BOOL' ? (
+                      <input
+                        type="checkbox"
+                        aria-label={t('tags.initial')}
+                        checked={Boolean(tg.initial)}
+                        disabled={readOnly}
+                        onChange={(e) => edit(tg.name, (x) => (x.initial = e.target.checked))}
+                      />
+                    ) : tg.type === 'TIMER' || tg.type === 'COUNTER' ? null : (
+                      <input
+                        type="number"
+                        className="num"
+                        aria-label={t('tags.initial')}
+                        defaultValue={typeof tg.initial === 'number' ? tg.initial : 0}
+                        readOnly={readOnly}
+                        onBlur={(e) => edit(tg.name, (x) => (x.initial = Number(e.target.value)))}
+                      />
+                    )}
+                  </td>
+                  <td className="c-desc">
                     <input
-                      type="checkbox"
-                      checked={Boolean(tg.initial)}
-                      disabled={readOnly}
-                      onChange={(e) => edit(tg.name, (x) => (x.initial = e.target.checked))}
-                    />
-                  ) : tg.type === 'TIMER' || tg.type === 'COUNTER' ? null : (
-                    <input
-                      type="number"
-                      className="num"
-                      defaultValue={typeof tg.initial === 'number' ? tg.initial : 0}
+                      defaultValue={tg.comment ?? ''}
+                      aria-label={t('tags.comment')}
                       readOnly={readOnly}
-                      onBlur={(e) => edit(tg.name, (x) => (x.initial = Number(e.target.value)))}
+                      onBlur={(e) => edit(tg.name, (x) => (x.comment = e.target.value))}
                     />
-                  )}
-                </td>
-                <td>
-                  <input
-                    defaultValue={tg.comment ?? ''}
-                    readOnly={readOnly}
-                    onBlur={(e) => edit(tg.name, (x) => (x.comment = e.target.value))}
-                  />
-                </td>
-                <td>
-                  <button
-                    className="link"
-                    onClick={() => setOpenRefs(openRefs === tg.name ? null : tg.name)}
-                    aria-expanded={openRefs === tg.name}
-                    data-testid={`xref-${tg.name}`}
-                  >
-                    {(xref.get(tg.name) ?? []).length || t('tags.unused')}
-                  </button>
-                </td>
-                <td>
-                  {!readOnly && (
+                  </td>
+                  <td className="c-use">
                     <button
-                      className="icon danger"
-                      title={t('tags.delete')}
-                      onClick={() => {
-                        const uses = (xref.get(tg.name) ?? []).length;
-                        updateWithUndo((d) => void (d.tags = d.tags.filter((x) => x.name !== tg.name)), {
-                          message: t('tags.deleted', { name: tg.name }),
-                          // References stay in the program and become errors: say so right away.
-                          detail: uses ? t('tags.deletedInUse', { count: uses }) : undefined,
-                        });
-                      }}
+                      className="link"
+                      onClick={() => setOpenRefs(openRefs === tg.name ? null : tg.name)}
+                      aria-expanded={openRefs === tg.name}
+                      data-testid={`xref-${tg.name}`}
                     >
-                      ×
+                      {(xref.get(tg.name) ?? []).length || t('tags.unused')}
                     </button>
-                  )}
-                </td>
-              </tr>
-              {openRefs === tg.name && (
-                <tr className="xref-row">
-                  <td colSpan={8}>
-                    <XRefList refs={xref.get(tg.name) ?? []} project={project} />
+                  </td>
+                  <td className="c-del">
+                    {!readOnly && (
+                      <button
+                        className="icon danger"
+                        title={t('tags.delete')}
+                        onClick={() => {
+                          const uses = (xref.get(tg.name) ?? []).length;
+                          updateWithUndo((d) => void (d.tags = d.tags.filter((x) => x.name !== tg.name)), {
+                            message: t('tags.deleted', { name: tg.name }),
+                            // References stay in the program and become errors: say so right away.
+                            detail: uses ? t('tags.deletedInUse', { count: uses }) : undefined,
+                          });
+                        }}
+                      >
+                        ×
+                      </button>
+                    )}
                   </td>
                 </tr>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
+                {openRefs === tg.name && (
+                  <tr className="xref-row">
+                    <td colSpan={8}>
+                      <XRefList refs={xref.get(tg.name) ?? []} project={project} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

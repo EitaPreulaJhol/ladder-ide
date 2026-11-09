@@ -32,3 +32,5 @@ export function setThemePref(pref: ThemePref): void {
 }
 
 export const NEXT_THEME: Record<ThemePref, ThemePref> = { system: 'light', light: 'dark', dark: 'system' };
+
+export const THEME_ICON: Record<ThemePref, string> = { system: '◐', light: '☀', dark: '☾' };

@@ -3,6 +3,20 @@ import { expect, test, type Page } from '@playwright/test';
 const watch = (page: Page, tag: string) => page.getByTestId(`watch-${tag}`);
 const lastToast = (page: Page) => page.getByTestId('toast').last();
 
+/** Opens the app and, from the welcome page, the seal-in example (the former default project). */
+async function openApp(page: Page) {
+  await page.goto('/');
+  await page.getByTestId('welcome-example-sealIn').click();
+  await expect(page.getByTestId('nav-editor')).toBeVisible();
+}
+
+/** Reloads the page and continues the last project from the welcome page. */
+async function resume(page: Page) {
+  await page.reload();
+  await page.getByTestId('welcome-continue').click();
+  await expect(page.getByTestId('nav-editor')).toBeVisible();
+}
+
 async function openExample(page: Page, id: string) {
   await page.getByTestId('nav-projects').click();
   await page.getByTestId(`example-${id}`).click();
@@ -10,7 +24,7 @@ async function openExample(page: Page, id: string) {
 }
 
 test('seal-in circuit: start latches the lamp, stop releases it', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await openExample(page, 'sealIn');
   await page.getByTestId('dock-panel').click();
   await page.getByTestId('run').click();
@@ -38,7 +52,7 @@ test('seal-in circuit: start latches the lamp, stop releases it', async ({ page 
 });
 
 test('build a rung from the palette, auto-create tags and switch dialects', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('new-project').click();
 
@@ -66,7 +80,7 @@ test('build a rung from the palette, auto-create tags and switch dialects', asyn
 });
 
 test('traffic light scenario cycles through all lights', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await openExample(page, 'scenario:traffic');
   await page.getByTestId('run').click();
   await page.locator('.sim-controls select').selectOption('10');
@@ -76,7 +90,7 @@ test('traffic light scenario cycles through all lights', async ({ page }) => {
 });
 
 test('share a snapshot, open it read-only and fork it', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await openExample(page, 'blinker');
   await page.getByTestId('share').click();
   await page.getByTestId('create-share').click();
@@ -97,7 +111,7 @@ test('share a snapshot, open it read-only and fork it', async ({ page }) => {
 });
 
 test('real PLC model: S7-1200 rack, typed address binds to the on-board input', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('new-project').click();
 
@@ -130,7 +144,7 @@ test('real PLC model: S7-1200 rack, typed address binds to the on-board input', 
 
 test('theme toggle cycles automatic → light → dark and is remembered', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
-  await page.goto('/');
+  await openApp(page);
   const html = page.locator('html');
   const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   await expect(html).not.toHaveAttribute('data-theme', /.*/);
@@ -145,7 +159,7 @@ test('theme toggle cycles automatic → light → dark and is remembered', async
   await expect(html).toHaveAttribute('data-theme', 'dark');
   expect(await bg()).toBe(systemDark);
 
-  await page.reload();
+  await resume(page);
   await expect(html).toHaveAttribute('data-theme', 'dark');
 
   await page.getByTestId('theme-toggle').click(); // back to automatic
@@ -155,7 +169,7 @@ test('theme toggle cycles automatic → light → dark and is remembered', async
 });
 
 test('trend chart records a one-scan pulse while running', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-counter').click();
   await page.getByTestId('trend-tab').click();
@@ -181,7 +195,7 @@ test('trend chart records a one-scan pulse while running', async ({ page }) => {
 test('automatic grading: reference passes, a broken program fails and shows its recording', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-scenario:traffic').click();
   await page.getByTestId('dock-plant').click();
@@ -205,7 +219,7 @@ test('automatic grading: reference passes, a broken program fails and shows its 
 });
 
 test('cross reference and "why?" explanation of a coil', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-scenario:motor').click();
 
@@ -237,7 +251,7 @@ test('cross reference and "why?" explanation of a coil', async ({ page }) => {
 });
 
 test('field faults: burnt contactor and hidden fault challenge', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-scenario:motor').click();
   await page.getByTestId('run').click();
@@ -274,7 +288,7 @@ test('field faults: burnt contactor and hidden fault challenge', async ({ page }
 });
 
 test('trend shows timer accumulators as time', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-blinker').click();
   await page.getByTestId('trend-tab').click();
@@ -287,7 +301,7 @@ test('trend shows timer accumulators as time', async ({ page }) => {
 });
 
 test('subroutines and jumps: program tabs, CALL and JMP/LBL', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-subroutines').click();
   await expect(page.getByTestId('program-tab-Principal')).toBeVisible();
@@ -316,7 +330,7 @@ test('subroutines and jumps: program tabs, CALL and JMP/LBL', async ({ page }) =
 });
 
 test('PID level control passes the automatic checks', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-scenario:tankPid').click();
   await page.getByTestId('dock-plant').click();
@@ -330,7 +344,7 @@ test('share with expiration and report a shared link', async ({ page }) => {
     'console',
     (m) => m.type() === 'error' && /Content Security Policy/i.test(m.text()) && cspErrors.push(m.text()),
   );
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('share').click();
   await page.getByTestId('share-expiration').selectOption('7');
   await page.getByTestId('create-share').click();
@@ -346,13 +360,13 @@ test('share with expiration and report a shared link', async ({ page }) => {
 });
 
 test('works offline after the first visit (service worker)', async ({ page, context }) => {
-  await page.goto('/');
+  await openApp(page);
   await expect(page.getByTestId('nav-editor')).toBeVisible();
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
   await context.setOffline(true);
-  await page.reload();
+  await resume(page);
   await expect(page.getByTestId('nav-editor')).toBeVisible();
   await expect(page.getByTestId('offline')).toBeVisible();
   await expect(page.getByTestId('share')).toBeDisabled();
@@ -363,7 +377,7 @@ test('works offline after the first visit (service worker)', async ({ page, cont
 });
 
 test('project documentation lists programs, tags and I/O', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-subroutines').click();
   await page.getByTestId('nav-doc').click();
@@ -376,7 +390,7 @@ test('project documentation lists programs, tags and I/O', async ({ page }) => {
 });
 
 test('GRAFCET: live steps, generated ladder and automatic checks', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-grafcetCylinders').click();
   await expect(page.getByTestId('grafcet')).toBeVisible();
@@ -409,7 +423,7 @@ test('GRAFCET: live steps, generated ladder and automatic checks', async ({ page
 });
 
 test('a new GRAFCET starts with two steps and empty conditions flagged', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('new-project').click();
   await page.getByTestId('add-grafcet').click();
@@ -424,13 +438,13 @@ test('a new GRAFCET starts with two steps and empty conditions flagged', async (
 });
 
 test('interface language: English and Spanish, remembered across reloads', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await expect(page.getByTestId('run')).toContainText('Executar');
   await page.getByTestId('language').selectOption('en');
   await expect(page.getByTestId('run')).toContainText('Run');
   await expect(page.getByTestId('nav-hardware')).toContainText('Hardware');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await page.reload();
+  await resume(page);
   await expect(page.getByTestId('run')).toContainText('Run');
   await page.getByTestId('language').selectOption('es');
   await expect(page.getByTestId('run')).toContainText('Ejecutar');
@@ -441,7 +455,7 @@ test('interface language: English and Spanish, remembered across reloads', async
 });
 
 test('PLCopen XML: export from the UI and import it back', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-scenario:starDelta').click();
   await page.getByTestId('nav-projects').click();
@@ -461,7 +475,7 @@ test('PLCopen XML: export from the UI and import it back', async ({ page }, test
 });
 
 test('HMI: screen from the I/O panel, add a bar and operate it', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-counter').click();
   await page.getByTestId('nav-hmi').click();
@@ -488,7 +502,7 @@ test('HMI: screen from the I/O panel, add a bar and operate it', async ({ page }
   await expect(page.getByTestId('hmi-w-bar-PECAS')).toContainText('3');
   await expect(page.getByTestId('hmi-w-bar-PECAS')).toContainText('Peças');
   // Saved with the project: still there after a reload.
-  await page.reload();
+  await resume(page);
   await page.getByTestId('nav-hmi').click();
   await expect(page.getByTestId('hmi-w-bar-PECAS')).toBeVisible();
 });
@@ -509,7 +523,7 @@ test('Modbus TCP bridge: a real Modbus client operates the simulation', async ({
       bridge.once('exit', (c) => reject(new Error(`bridge exited ${c}`)));
     });
 
-    await page.goto('/');
+    await openApp(page);
     await page.getByTestId('nav-projects').click();
     await page.getByTestId('example-sealIn').click();
     await page.getByTestId('nav-hardware').click();
@@ -546,7 +560,7 @@ test('Modbus TCP bridge: a real Modbus client operates the simulation', async ({
 });
 
 test('editable plant: conveyor exercise rebuilt with components sorts a tall part', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-plant').click();
   await page.getByTestId('plant-template').selectOption('conveyor');
   await page.getByTestId('plant-with-solution').check();
@@ -567,7 +581,7 @@ test('editable plant: conveyor exercise rebuilt with components sorts a tall par
 });
 
 test('editable plant: build from scratch, create tags, drag and operate', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('new-project').click();
   await page.getByTestId('nav-plant').click();
@@ -610,7 +624,7 @@ test('editable plant: build from scratch, create tags, drag and operate', async 
 });
 
 test('destructive edits run at once with an "Undo" toast', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('example-subroutines').click();
   await page.getByTestId('program-tab-Alarmes').click();
@@ -625,7 +639,7 @@ test('destructive edits run at once with an "Undo" toast', async ({ page }) => {
 });
 
 test('deleted projects go to the trash and can be restored', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('new-project').click();
   await page.getByTestId('nav-projects').click();
@@ -659,7 +673,7 @@ test('deleted projects go to the trash and can be restored', async ({ page }) =>
 });
 
 test('"?" opens the keyboard shortcuts; Esc closes them without touching the editor', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page);
   await openExample(page, 'sealIn');
   await page.locator('.rung-gutter').first().click(); // a selected rung: Delete would remove it
   await page.keyboard.press('?');
@@ -674,7 +688,7 @@ test('"?" opens the keyboard shortcuts; Esc closes them without touching the edi
 
 test('narrow screens: less used top bar actions move to the "⋯" menu', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 700 });
-  await page.goto('/');
+  await openApp(page);
   await expect(page.getByTestId('language')).toBeHidden();
   await expect(page.getByTestId('share')).toBeInViewport({ ratio: 1 });
   await page.getByTestId('more-menu').click();
@@ -682,4 +696,38 @@ test('narrow screens: less used top bar actions move to the "⋯" menu', async (
   await expect(page.getByRole('menu')).toHaveCount(0);
   await expect(page.getByTestId('nav-projects')).toContainText('Projects');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
+});
+
+test('welcome page: blank project, examples, saved projects and opening a file', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('welcome')).toBeVisible();
+  await expect(page.getByTestId('welcome-continue')).toHaveCount(0); // nothing saved yet
+  await expect(page.getByTestId('welcome')).toContainText('Nenhum projeto salvo ainda');
+
+  await page.getByTestId('welcome-new').click();
+  await expect(page.locator('.project-name')).toHaveValue('Novo projeto');
+
+  // The logo goes back; "Continue" returns to the open project.
+  await page.getByTestId('home').click();
+  await expect(page.getByTestId('welcome-continue')).toContainText('Novo projeto');
+  await expect(page.getByTestId('welcome-saved-project')).toHaveCount(1);
+  await page.getByTestId('welcome-example-blinker').click();
+  await expect(page.getByTestId('nav-editor')).toHaveClass(/active/);
+  const blinker = await page.locator('.project-name').inputValue();
+
+  // On a new visit, "Continue" reopens the last project.
+  await page.reload();
+  await expect(page.getByTestId('welcome-continue')).toContainText(blinker);
+  await expect(page.getByTestId('welcome-saved-project')).toHaveCount(2);
+  await page.getByTestId('welcome-continue').click();
+  await expect(page.locator('.project-name')).toHaveValue(blinker);
+
+  // Open a file: the exported project comes back as a copy with a unique name.
+  const download = page.waitForEvent('download');
+  await page.getByTestId('export').click();
+  const file = await (await download).path();
+  await page.getByTestId('home').click();
+  await page.getByTestId('welcome-file').setInputFiles(file);
+  await expect(page.locator('.project-name')).toHaveValue(`${blinker} 2`);
+  await expect(lastToast(page)).toContainText('importado');
 });

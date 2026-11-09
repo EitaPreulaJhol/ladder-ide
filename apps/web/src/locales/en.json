@@ -1038,5 +1038,19 @@
       "dblclick": "double-click",
       "space": "Space"
     }
+  },
+  "welcome": {
+    "home": "Home: open, create or pick a project",
+    "start": "Get started",
+    "continue": "Continue “{{name}}”",
+    "continueHint": "Back to the project you were working on.",
+    "new": "Blank project",
+    "newHint": "An empty program. The dialect and PLC model can be chosen later.",
+    "open": "Open file…",
+    "openHint": "An exported project (.json) or PLCopen XML from another tool. You can also drag the file onto this page.",
+    "saved": "Projects saved in this browser",
+    "noSaved": "No saved projects yet. Start with a blank project or one of the examples below.",
+    "openFailed": "Could not open “{{name}}”.",
+    "drop": "Drop the file to open the project"
   }
 }

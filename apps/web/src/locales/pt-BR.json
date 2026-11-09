@@ -1038,5 +1038,19 @@
       "dblclick": "duplo clique",
       "space": "Espaço"
     }
+  },
+  "welcome": {
+    "home": "Início: abrir, criar ou escolher um projeto",
+    "start": "Começar",
+    "continue": "Continuar “{{name}}”",
+    "continueHint": "Volta ao projeto em que você estava trabalhando.",
+    "new": "Projeto em branco",
+    "newHint": "Um programa vazio. O dialeto e o modelo de CLP podem ser escolhidos depois.",
+    "open": "Abrir arquivo…",
+    "openHint": "Projeto exportado (.json) ou PLCopen XML de outra ferramenta. Também dá para arrastar o arquivo para esta página.",
+    "saved": "Projetos salvos neste navegador",
+    "noSaved": "Nenhum projeto salvo ainda. Comece por um projeto em branco ou por um dos exemplos abaixo.",
+    "openFailed": "Não foi possível abrir “{{name}}”.",
+    "drop": "Solte o arquivo para abrir o projeto"
   }
 }

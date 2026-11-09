@@ -117,7 +117,11 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
       </div>
 
       <span className="grow" />
-      {savedAt && !readOnly && <span className="muted small hide-narrow">✓ {t('top.saved')}</span>}
+      {savedAt && !readOnly && (
+        <span className="muted small hide-narrow" title={t('top.saved')}>
+          ✓ <span className="saved-label">{t('top.saved')}</span>
+        </span>
+      )}
       <span className="topbar-extras">
         <select
           className="lang-select"

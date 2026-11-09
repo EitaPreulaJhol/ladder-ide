@@ -915,12 +915,135 @@ table.grid tr.unused td {
 .view h3 {
   margin: 4px 0;
 }
-.tags-table input,
+.tags-wrap {
+  container: tags / inline-size;
+}
+.tags-table input:not([type='checkbox']),
 .tags-table select {
   width: 100%;
 }
-.tags-table td:first-child {
-  min-width: 140px;
+.tags-table th,
+.tags-table td {
+  padding-inline: 5px;
+}
+/* Wide: one line per tag, with room for what each field shows. */
+.tags-table .c-name {
+  min-width: 130px;
+}
+.tags-table .c-type {
+  width: 96px;
+}
+.tags-table .c-io {
+  width: 200px;
+}
+.tags-table .c-addr {
+  width: 100px;
+}
+.tags-table .c-init {
+  width: 70px;
+}
+.tags-table .c-desc {
+  min-width: 150px;
+}
+.tags-table .c-use,
+.tags-table .c-del {
+  width: 1%;
+  white-space: nowrap;
+}
+.tags-table .xref-row td {
+  padding: 4px 8px 8px;
+}
+
+/* Narrow: two aligned lines per tag, under a two-line header with the same grid. */
+@container tags (max-width: 900px) {
+  .tags-table,
+  .tags-table thead,
+  .tags-table tbody,
+  .tags-table tr {
+    display: block;
+  }
+  .tags-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--panel-2);
+  }
+  .tags-table tr.tag-row {
+    display: grid;
+    grid-template-columns: minmax(90px, 1fr) 84px minmax(110px, 1.6fr) 88px 36px;
+    grid-template-areas:
+      'name type io   addr del'
+      'name init desc desc use';
+    align-items: center;
+    gap: 4px 6px;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tags-table tr.tag-row > * {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    position: static;
+  }
+  .tags-table thead tr.tag-row {
+    padding-block: 4px;
+    row-gap: 0;
+  }
+  .tags-table thead th {
+    background: none;
+    line-height: 1.25;
+  }
+  /* Header labels share a cell area, so put them on one line each. */
+  .tags-table thead th.c-io,
+  .tags-table thead th.c-init {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tags-table tbody .c-name {
+    align-self: start;
+  }
+  .tags-table .c-name {
+    grid-area: name;
+  }
+  .tags-table .c-type {
+    grid-area: type;
+  }
+  .tags-table .c-io {
+    grid-area: io;
+  }
+  .tags-table .c-addr {
+    grid-area: addr;
+  }
+  .tags-table .c-init {
+    grid-area: init;
+  }
+  .tags-table .c-desc {
+    grid-area: desc;
+  }
+  .tags-table .c-use {
+    grid-area: use;
+    text-align: center;
+  }
+  .tags-table .c-del {
+    grid-area: del;
+    text-align: center;
+  }
+  .tags-table .xref-row td {
+    display: block;
+    border-bottom: 1px solid var(--border);
+  }
+}
+/* Phones: three lines per tag. */
+@container tags (max-width: 480px) {
+  .tags-table tr.tag-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 84px 36px;
+    grid-template-areas:
+      'name name type del'
+      'io   io   addr addr'
+      'init desc desc use';
+  }
 }
 
 .card {
@@ -1682,6 +1805,12 @@ kbd {
 
 /* ------------------------------------------------------------ responsive / print */
 
+@media (max-width: 1700px) {
+  /* Only the ✓ (text in the tooltip): the bar is full just above the breakpoints below. */
+  .saved-label {
+    display: none;
+  }
+}
 @media (max-width: 1600px) {
   .label-wide {
     display: none;

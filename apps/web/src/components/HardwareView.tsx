@@ -3,6 +3,7 @@ import { locale } from '../i18n.ts';
 import { useTranslation } from 'react-i18next';
 import {
   catalogFor,
+  compareHardware,
   channelType,
   createModule,
   expansionSlots,
@@ -22,6 +23,8 @@ import {
 import { useProject } from '../store/project.ts';
 import { downloadText, safeFileName } from '../storage/db.ts';
 import { ModbusPanel } from './ModbusPanel.tsx';
+import { updateWithUndo } from '../store/undoable.ts';
+import { toast } from '../store/toast.ts';
 
 const KIND_COLOR: Record<string, string> = {
   PS: '#a855f7',
@@ -44,7 +47,6 @@ export function HardwareView() {
   const [catalogId, setCatalogId] = useState<string>('');
   const selectedCatalog =
     catalog.find((c) => c.id === catalogId) ?? catalog.find((c) => c.kind === 'DI') ?? catalog[0]!;
-  const [message, setMessage] = useState<string | null>(null);
   const rows = useMemo(() => ioList(project), [project]);
   const count = (k: string) => hw.modules.filter((m) => m.kind === k).reduce((a, m) => a + m.channels, 0);
 
@@ -55,10 +57,23 @@ export function HardwareView() {
 
   const changeModel = (familyId: FamilyId, cpuId?: string) => {
     if (familyId === hw.family && cpuId === hw.cpu) return;
-    if (!confirm(t('hw.changeConfirm'))) return;
-    setMessage(null);
     setCatalogId('');
-    update((d) => setPlcModel(d, familyId, cpuId));
+    // Applied at once; the toast says what changed in the rack and the tags, with "Undo".
+    updateWithUndo(
+      (d) => setPlcModel(d, familyId, cpuId),
+      (before, after) => {
+        const c = compareHardware(before, after);
+        const fam = getFamily(after.hardware.family);
+        const model = fam ? `${fam.vendor} ${familyCpu(after.hardware)?.name ?? fam.name}` : t('hw.generic');
+        const parts = [
+          c.removedModules && t('hw.changedModules', { count: c.removedModules }),
+          c.moved.length && t('hw.changedMoved', { count: c.moved.length }),
+          c.unbound.length && t('hw.changedUnbound', { names: c.unbound.join(', ') }),
+          c.dialectChanged && t('hw.changedDialect', { dialect: getDialect(after.dialect).name }),
+        ].filter(Boolean);
+        return { message: t('hw.changed', { model }), detail: parts.join(' · ') || t('hw.changedNothing') };
+      },
+    );
   };
 
   const addAt = (slot: number) =>
@@ -68,18 +83,27 @@ export function HardwareView() {
   const addFirstFree = () => {
     if (family) {
       const slot = nextFreeSlot(hw);
-      if (slot === null) return setMessage(t('hw.cpuFull', { cpu: cpu?.name, max: cpu?.maxModules ?? 0 }));
+      if (slot === null)
+        return void toast(t('hw.cpuFull', { cpu: cpu?.name, max: cpu?.maxModules ?? 0 }), { kind: 'error' });
       return addAt(slot);
     }
     const used = new Set(hw.modules.map((m) => m.slot));
     for (let s = 0; s < hw.slots; s++) if (!used.has(s)) return addAt(s);
-    setMessage(t('hw.slotFull'));
+    toast(t('hw.slotFull'), { kind: 'error' });
   };
-  const removeModule = (m: HardwareModule) =>
-    update((d) => {
-      d.hardware.modules = d.hardware.modules.filter((x) => x.id !== m.id);
-      for (const tg of d.tags) if (tg.io?.module === m.id) delete tg.io;
-    });
+  const removeModule = (m: HardwareModule) => {
+    const bound = project.tags.filter((tg) => tg.io?.module === m.id).map((tg) => tg.name);
+    updateWithUndo(
+      (d) => {
+        d.hardware.modules = d.hardware.modules.filter((x) => x.id !== m.id);
+        for (const tg of d.tags) if (tg.io?.module === m.id) delete tg.io;
+      },
+      {
+        message: t('hw.moduleRemoved', { kind: m.kind, slot: m.slot }),
+        detail: bound.length ? t('hw.changedUnbound', { names: bound.join(', ') }) : undefined,
+      },
+    );
+  };
 
   const createTag = (moduleId: string, channel: number, kind: string) => {
     const prefix = { DI: 'DI', DO: 'DO', AI: 'AI', AO: 'AO' }[kind] ?? 'IO';
@@ -349,7 +373,6 @@ export function HardwareView() {
           <button onClick={addFirstFree} data-testid="add-module">
             {t('hw.add')}
           </button>
-          {message && <span className="error-text">{message}</span>}
         </div>
       )}
 

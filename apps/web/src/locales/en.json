@@ -34,7 +34,9 @@
     "theme_system": "automatic (follows the system)",
     "theme_light": "light",
     "theme_dark": "dark",
-    "language": "Language"
+    "language": "Language",
+    "saveError": "Could not save the project in the browser.",
+    "exportJson": "Export project (.json)"
   },
   "shared": {
     "banner": "You are viewing a shared project (read-only). Feel free to simulate it; to edit, make a copy.",
@@ -44,7 +46,8 @@
     "error": "Could not load the project: {{error}}",
     "backHome": "Back to start",
     "expired": "This share link has expired.",
-    "hidden": "This link was reported and is under review."
+    "hidden": "This link was reported and is under review.",
+    "forked": "Copy “{{name}}” saved to your projects. You can edit it now."
   },
   "share": {
     "title": "Share project",
@@ -259,9 +262,14 @@
     "unused": "Unused",
     "exportCsv": "Export CSV",
     "addressHint": "Manual address in the current dialect (e.g. {{example}})",
-    "invalidName": "Invalid or duplicate name",
+    "invalidName": "Invalid tag name: use letters, digits and _, starting with a letter or _.",
     "invalidAddress": "Invalid address for the {{dialect}} dialect",
-    "help": "Tags bound to a hardware channel get their address computed automatically from the rack and the chosen dialect."
+    "help": "Tags bound to a hardware channel get their address computed automatically from the rack and the chosen dialect.",
+    "nameTaken": "A tag called {{name}} already exists.",
+    "nameKept": "The tag stays as {{name}}.",
+    "deleted": "Tag {{name}} deleted.",
+    "deletedInUse_one": "It was used in {{count}} place in the program, now shown as an error.",
+    "deletedInUse_other": "It was used in {{count}} places in the program, now shown as errors."
   },
   "hw": {
     "title": "Hardware planning",
@@ -293,14 +301,22 @@
     "family": "PLC model",
     "generic": "Generic (free rack)",
     "cpu": "CPU",
-    "changeConfirm": "Changing the PLC model rebuilds the rack (incompatible modules are removed), adjusts the dialect and re-binds I/O tags to free channels. Continue?",
     "maxModules": "up to {{n}} expansion module(s)",
     "dialectFromFamily": "dialect: {{dialect}}",
     "unverified": "Points not yet confirmed in official documentation (check the manual before building the panel):",
     "sources": "Data sources",
     "disclaimer": "Names and part numbers are cited only to indicate compatibility. This project is not affiliated with the manufacturers.",
     "cpuFull": "The {{cpu}} accepts at most {{max}} expansion module(s).",
-    "noExpansion": "This CPU does not accept expansion modules."
+    "noExpansion": "This CPU does not accept expansion modules.",
+    "changed": "PLC model changed to {{model}}.",
+    "changedModules_one": "{{count}} module removed from the rack",
+    "changedModules_other": "{{count}} modules removed from the rack",
+    "changedMoved_one": "{{count}} tag changed address",
+    "changedMoved_other": "{{count}} tags changed address",
+    "changedUnbound": "No channel: {{names}}",
+    "changedDialect": "Dialect: {{dialect}}",
+    "changedNothing": "No tag changed address.",
+    "moduleRemoved": "{{kind}} module in slot {{slot}} removed."
   },
   "panel": {
     "title": "I/O panel",
@@ -329,8 +345,6 @@
     "choose": "Choose a scenario",
     "apply": "Use this scenario",
     "applyWithSolution": "Use with sample solution",
-    "applyConfirm": "The scenario tags will be created and bound to free hardware channels. Continue?",
-    "solutionConfirm": "The current program will be replaced by the sample solution. Continue?",
     "remove": "Detach plant",
     "reset": "Reset plant",
     "task": "Exercise",
@@ -421,7 +435,10 @@
       "lastWrong": "The last cycle did not follow the A+ B+ A− B− order.",
       "start": "START",
       "reset": "Reset count"
-    }
+    },
+    "applied": "Scenario “{{name}}” applied.",
+    "appliedDetail": "Scenario tags created and bound to free hardware channels.",
+    "appliedDetailSolution": "The program was replaced by the sample solution."
   },
   "projects": {
     "title": "Projects",
@@ -430,7 +447,6 @@
     "import": "Import file (.json or PLCopen .xml)…",
     "open": "Open",
     "delete": "Delete",
-    "deleteConfirm": "Delete the project “{{name}}” from this browser? This cannot be undone.",
     "current": "current",
     "examples": "Examples and exercises",
     "useExample": "Open example",
@@ -453,7 +469,23 @@
     "contentNote": "Example projects (names, comments and tag descriptions) are written in Portuguese.",
     "exportPlcopen": "Export PLCopen XML",
     "exportPlcopenHint": "IEC 61131-3 exchange format (CODESYS, OpenPLC, Beremiz). Hardware and GRAFCET are not included.",
-    "importWarnings": "Import finished with {{n}} warning(s):"
+    "importWarnings": "Import finished with {{n}} warning(s):",
+    "trashed": "Project “{{name}}” moved to the trash.",
+    "trashHint_one": "Projects in the trash are deleted for good after {{count}} day.",
+    "trashHint_other": "Projects in the trash are deleted for good after {{count}} days.",
+    "trash_one": "Trash ({{count}} project)",
+    "trash_other": "Trash ({{count}} projects)",
+    "restore": "Restore",
+    "restored": "Project “{{name}}” restored.",
+    "deletedOn": "Deleted on {{date}}",
+    "deleteForever": "Delete forever",
+    "deleteForeverConfirm": "Delete “{{name}}” forever? This cannot be undone.",
+    "emptyTrash": "Empty trash",
+    "emptyTrashConfirm_one": "Delete {{count}} project in the trash forever? This cannot be undone.",
+    "emptyTrashConfirm_other": "Delete {{count}} projects in the trash forever? This cannot be undone.",
+    "imported": "Project “{{name}}” imported.",
+    "nameTaken": "Another project in this browser is already called “{{name}}”.",
+    "nameTakenHint": "The name was kept, but it may be confusing in the project list."
   },
   "widgets": {
     "on": "ON",
@@ -464,7 +496,11 @@
     "ok": "OK",
     "yes": "Yes",
     "no": "No",
-    "none": "—"
+    "none": "—",
+    "undo": "Undo",
+    "close": "Close",
+    "notifications": "Notifications",
+    "more": "More options"
   },
   "trend": {
     "add": "Add signal",
@@ -653,10 +689,11 @@
     "moveLeft": "Move left (runs earlier)",
     "moveRight": "Move right (runs later)",
     "delete": "Delete program",
-    "deleteConfirm": "Delete the program “{{name}}”?",
-    "deleteCalled": "The program “{{name}}” is called {{n}} time(s). Delete anyway? The calls will become invalid.",
     "nameTaken": "A program with this name already exists.",
-    "grafcetHint": "Program generated from a GRAFCET: edit the GRAFCET; the ladder is updated automatically."
+    "grafcetHint": "Program generated from a GRAFCET: edit the GRAFCET; the ladder is updated automatically.",
+    "deleted": "Program “{{name}}” deleted.",
+    "deletedCalled_one": "Warning: {{count}} CALL instruction still calls this program and is now invalid.",
+    "deletedCalled_other": "Warning: {{count}} CALL instructions still call this program and are now invalid."
   },
   "report": {
     "open": "Report",
@@ -728,7 +765,6 @@
     "run": "Operate",
     "screenName": "Screen name",
     "deleteScreen": "Delete this screen",
-    "deleteScreenConfirm": "Delete the screen “{{name}}”?",
     "help": "Click a palette item to add it. Drag to move, use the bottom-right corner to resize and Del to delete the selected item.",
     "newText": "Text",
     "noTag": "— no tag —",
@@ -749,7 +785,9 @@
       "numeric": "Numeric input",
       "nav": "Navigation",
       "trend": "Chart"
-    }
+    },
+    "screenDeleted": "Screen “{{name}}” deleted.",
+    "nameTaken": "A screen with this name already exists."
   },
   "modbus": {
     "title": "Modbus TCP bridge (real HMI / SCADA)",
@@ -798,12 +836,10 @@
     "blank": "Start from scratch",
     "fromTemplate": "Open exercise as editable plant",
     "withSolution": "with the sample solution (replaces the program)",
-    "templateConfirm": "The exercise tags will be created and bound to the hardware, and its plant will come as editable components (without automatic checking). Continue?",
     "scenarioActive": "This project uses the exercise «{{name}}», with a fixed plant and automatic checking.",
     "convert": "Convert to editable plant",
     "convertShort": "Edit plant",
     "convertHint": "Opens the option to convert this exercise into an editable plant",
-    "convertConfirm": "The plant becomes a set of editable components with the same tags. The exercise's automatic checking no longer applies. Continue?",
     "edit": "Edit",
     "operate": "Operate",
     "openView": "Open full screen",
@@ -811,7 +847,6 @@
     "clearParts": "Clear parts",
     "reset": "Reset plant",
     "remove": "Remove plant",
-    "removeConfirm": "Remove the plant? The tags stay in the project.",
     "width": "Width",
     "height": "Height",
     "help": "Click a component to edit it. Drag to move; the small corner square resizes. Del deletes; arrow keys move (Shift: 1 px).",
@@ -960,6 +995,48 @@
       "overflows": "⚠ Overflowed {{n}}×. Clear",
       "overheats": "⚠ Overheated {{n}}×. Clear",
       "manualValve": "drag the bar under the valve"
+    },
+    "removed": "Plant removed. The tags stay in the project.",
+    "converted": "Plant converted into editable components.",
+    "convertedDetail": "The tags are the same; the exercise’s automatic grading no longer applies.",
+    "templateApplied": "Exercise “{{name}}” created as an editable plant.",
+    "templateDetail": "Tags created and bound to the hardware; no automatic grading.",
+    "templateDetailSolution": "Tags created and bound to the hardware; the program was replaced by the sample solution."
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "open": "Keyboard shortcuts (?)",
+    "groups": {
+      "general": "General",
+      "editor": "Ladder editor",
+      "layout": "Plant and HMI (edit mode)",
+      "operate": "Operation and trend"
+    },
+    "items": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "help": "Show this list",
+      "closeDialog": "Close dialog or menu",
+      "copy": "Copy the selected element or rung",
+      "paste": "Paste at the cursor",
+      "deleteSelection": "Delete the selection",
+      "branch": "Create a parallel branch (OR) around the selection",
+      "clearSelection": "Clear selection and cursor",
+      "rangeSelection": "Select several elements in series",
+      "renameProgram": "On a program tab: rename",
+      "confirmField": "Confirm the field being edited",
+      "removeItem": "Remove the selected item",
+      "moveItem": "Move the plant component along the grid",
+      "moveItemFine": "Move 1 pixel at a time",
+      "pressButton": "Press the focused panel button",
+      "trendCursor": "Move the trend chart cursor",
+      "trendEnds": "Go to the start / end of the trend"
+    },
+    "k": {
+      "delete": "Delete",
+      "click": "click",
+      "dblclick": "double-click",
+      "space": "Space"
     }
   }
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Program, Series } from '@ladder/core';
 import { useProject } from '../../store/project.ts';
+import { runWithUndo } from '../../store/undoable.ts';
 
 /** Program list: main programs run every scan in this order; subroutines run only when called. */
 export function ProgramTabs() {
@@ -12,15 +13,23 @@ export function ProgramTabs() {
   const a = useProject.getState();
   const [renaming, setRenaming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Name taken by another program, checked while typing. */
+  const taken = (id: string, name: string) => programs.some((p) => p.id !== id && p.name === name.trim());
   const current = programs.find((p) => p.id === programId) ?? programs[0]!;
   const isSub = current.kind === 'sub';
 
   const remove = () => {
-    const calls = countCalls(programs, current.name);
-    const msg = calls
-      ? t('programs.deleteCalled', { name: current.name, n: calls })
-      : t('programs.deleteConfirm', { name: current.name });
-    if (confirm(msg)) a.deleteProgram(current.id);
+    const { id, name } = current;
+    const calls = countCalls(programs, name);
+    runWithUndo(
+      () => a.deleteProgram(id),
+      {
+        message: t('programs.deleted', { name }),
+        // Deleting a called subroutine leaves its CALLs dangling: say so right away.
+        detail: calls ? t('programs.deletedCalled', { count: calls }) : undefined,
+      },
+      { afterUndo: () => a.setProgram(id) },
+    );
   };
 
   return (
@@ -33,14 +42,23 @@ export function ProgramTabs() {
             className="program-rename"
             autoFocus
             defaultValue={p.name}
+            aria-label={t('programs.rename')}
+            aria-invalid={!!error}
+            onChange={(e) => setError(taken(p.id, e.target.value) ? t('programs.nameTaken') : null)}
             onBlur={(e) => {
-              if (!a.renameProgram(p.id, e.target.value)) setError(t('programs.nameTaken'));
+              // A blank name cancels; a taken one is refused (the program keeps its old name).
+              if (!e.target.value.trim()) setError(null);
+              else if (!a.renameProgram(p.id, e.target.value)) setError(t('programs.nameTaken'));
               else setError(null);
               setRenaming(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-              if (e.key === 'Escape') setRenaming(null);
+              // Enter on a taken name keeps the field open to fix it.
+              if (e.key === 'Enter' && !taken(p.id, e.currentTarget.value)) e.currentTarget.blur();
+              if (e.key === 'Escape') {
+                setError(null);
+                setRenaming(null);
+              }
             }}
           />
         ) : (
@@ -117,6 +135,7 @@ export function ProgramTabs() {
               title={t('programs.delete')}
               disabled={programs.length <= 1}
               onClick={remove}
+              data-testid="delete-program"
             >
               🗑
             </button>

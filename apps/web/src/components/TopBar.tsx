@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DIALECTS, DIALECT_IDS, type DialectId } from '@ladder/core';
 import { useProject } from '../store/project.ts';
 import { useSim } from '../store/sim.ts';
 import { downloadText, safeFileName } from '../storage/db.ts';
+import { renameProject } from '../session.ts';
+import { useUi } from '../store/ui.ts';
 import { ShareDialog } from './ShareDialog.tsx';
 import { useOnline } from '../pwa.ts';
 import { LANGUAGES, setLanguage, type Language } from '../i18n.ts';
@@ -28,6 +30,15 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
   const [sharing, setSharing] = useState(false);
   const [theme, setTheme] = useState<ThemePref>(getThemePref);
   const dialectLocked = project.hardware.family !== 'generic';
+  const themeLabel = t('top.theme', { mode: t(`top.theme_${theme}`) });
+  const cycleTheme = () => {
+    const next = NEXT_THEME[theme];
+    setThemePref(next);
+    setTheme(next);
+  };
+  const openShortcuts = () => useUi.getState().setShortcutsOpen(true);
+  const exportJson = () =>
+    downloadText(`${safeFileName(project.meta.name)}.ladder.json`, JSON.stringify(project, null, 2));
   const online = useOnline();
 
   return (
@@ -42,10 +53,7 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
         defaultValue={project.meta.name}
         readOnly={readOnly}
         aria-label={t('top.projectName')}
-        onBlur={(e) =>
-          e.target.value !== project.meta.name &&
-          update((d) => void (d.meta.name = e.target.value || 'Sem nome'))
-        }
+        onBlur={(e) => void renameProject(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
       />
       {!readOnly && (
@@ -112,41 +120,70 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
 
       <span className="grow" />
       {savedAt && !readOnly && <span className="muted small hide-narrow">✓ {t('top.saved')}</span>}
-      <select
-        className="lang-select"
-        value={i18n.language}
-        onChange={(e) => setLanguage(e.target.value as Language)}
-        aria-label={t('top.language')}
-        title={t('top.language')}
-        data-testid="language"
-      >
-        {LANGUAGES.map((l) => (
-          <option key={l.id} value={l.id}>
-            {l.short}
-          </option>
-        ))}
-      </select>
-      <button
-        className="icon theme-toggle"
-        data-testid="theme-toggle"
-        title={t('top.theme', { mode: t(`top.theme_${theme}`) })}
-        aria-label={t('top.theme', { mode: t(`top.theme_${theme}`) })}
-        onClick={() => {
-          const next = NEXT_THEME[theme];
-          setThemePref(next);
-          setTheme(next);
-        }}
-      >
-        {THEME_ICON[theme]}
-      </button>
-      <button
-        onClick={() =>
-          downloadText(`${safeFileName(project.meta.name)}.ladder.json`, JSON.stringify(project, null, 2))
-        }
-        title={t('top.export')}
-      >
-        ⤓ <span className="label-wide">{t('top.export')}</span>
-      </button>
+      <span className="topbar-extras">
+        <select
+          className="lang-select"
+          value={i18n.language}
+          onChange={(e) => setLanguage(e.target.value as Language)}
+          aria-label={t('top.language')}
+          title={t('top.language')}
+          data-testid="language"
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.short}
+            </option>
+          ))}
+        </select>
+        <button
+          className="icon theme-toggle"
+          data-testid="theme-toggle"
+          title={themeLabel}
+          aria-label={themeLabel}
+          onClick={cycleTheme}
+        >
+          {THEME_ICON[theme]}
+        </button>
+        <button
+          className="icon"
+          onClick={openShortcuts}
+          title={t('shortcuts.open')}
+          aria-label={t('shortcuts.open')}
+        >
+          ⌨
+        </button>
+        <button onClick={exportJson} title={t('top.export')}>
+          ⤓ <span className="label-wide">{t('top.export')}</span>
+        </button>
+      </span>
+      <MoreMenu>
+        <div className="menu-label" id="more-lang">
+          {t('top.language')}
+        </div>
+        <div role="group" aria-labelledby="more-lang">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.id}
+              role="menuitemradio"
+              aria-checked={i18n.language === l.id}
+              onClick={() => setLanguage(l.id)}
+              data-close
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <hr />
+        <button role="menuitem" onClick={cycleTheme}>
+          {THEME_ICON[theme]} {themeLabel}
+        </button>
+        <button role="menuitem" onClick={openShortcuts} data-close>
+          ⌨ {t('shortcuts.open')}
+        </button>
+        <button role="menuitem" onClick={exportJson} data-close>
+          ⤓ {t('top.exportJson')}
+        </button>
+      </MoreMenu>
       {!online && (
         <span className="offline-badge" title={t('pwa.offlineHint')} data-testid="offline">
           {t('pwa.offline')}
@@ -163,5 +200,82 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
       </button>
       {sharing && <ShareDialog onClose={() => setSharing(false)} />}
     </header>
+  );
+}
+
+/**
+ * "⋯" menu with the less used top bar actions; shown only where the bar is too narrow
+ * for them (see .topbar-extras in styles.css). Fixed position: the bar clips overflow.
+ */
+function MoreMenu({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const close = () => {
+    setPos(null);
+    button.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!pos) return;
+    menu.current?.querySelector<HTMLElement>('button')?.focus();
+    const onDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (!menu.current?.contains(target) && !button.current?.contains(target)) setPos(null);
+    };
+    const onResize = () => setPos(null);
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [pos]);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    e.stopPropagation(); // not for the editor shortcuts
+    const items = [...(menu.current?.querySelectorAll<HTMLElement>('button') ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowDown') items[(i + 1) % items.length]?.focus();
+    else if (e.key === 'ArrowUp') items[(i - 1 + items.length) % items.length]?.focus();
+    else if (e.key === 'Tab') setPos(null);
+    else return;
+    if (e.key !== 'Tab') e.preventDefault();
+  };
+
+  return (
+    <>
+      <button
+        ref={button}
+        className="icon more-button"
+        aria-haspopup="menu"
+        aria-expanded={!!pos}
+        title={t('common.more')}
+        aria-label={t('common.more')}
+        onClick={() => {
+          if (pos) return setPos(null);
+          const r = button.current!.getBoundingClientRect();
+          setPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+        }}
+        data-testid="more-menu"
+      >
+        ⋯
+      </button>
+      {pos && (
+        <div
+          ref={menu}
+          className="menu"
+          role="menu"
+          style={pos}
+          onKeyDown={onKeyDown}
+          // Items marked data-close close the menu after their action.
+          onClick={(e) => (e.target as HTMLElement).closest('[data-close]') && close()}
+        >
+          {children}
+        </div>
+      )}
+    </>
   );
 }

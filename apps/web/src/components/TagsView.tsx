@@ -13,6 +13,8 @@ import {
   type Tag,
 } from '@ladder/core';
 import { useProject } from '../store/project.ts';
+import { toast } from '../store/toast.ts';
+import { updateWithUndo } from '../store/undoable.ts';
 import { XRefList } from './xref/XRefList.tsx';
 import { downloadText, safeFileName } from '../storage/db.ts';
 
@@ -27,7 +29,13 @@ export function TagsView() {
   const xref = useMemo(() => crossReference(project), [project]);
   const [openRefs, setOpenRefs] = useState<string | null>(null);
   const rows = useMemo(() => ioList(project), [project]);
-  const [error, setError] = useState<string | null>(null);
+  /** Why a tag name is refused (null when it is fine). */
+  const nameProblem = (name: string, current: string) =>
+    !isValidTagName(name)
+      ? t('tags.invalidName')
+      : project.tags.some((x) => x.name === name && x.name !== current)
+        ? t('tags.nameTaken', { name })
+        : null;
 
   const addTag = () => {
     let i = 1;
@@ -62,7 +70,6 @@ export function TagsView() {
         </button>
       </div>
       <p className="muted small">{t('tags.help')}</p>
-      {error && <p className="error-text">{error}</p>}
       <table className="grid tags-table">
         <thead>
           <tr>
@@ -86,15 +93,25 @@ export function TagsView() {
                     defaultValue={tg.name}
                     readOnly={readOnly}
                     key={tg.name}
+                    aria-label={t('tags.name')}
+                    onChange={(e) => {
+                      // Flag the problem while typing; the name is only refused on leaving the field.
+                      const problem = nameProblem(e.target.value.trim(), tg.name);
+                      e.target.setAttribute('aria-invalid', String(!!problem));
+                      e.target.title = problem ?? '';
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                     onBlur={(e) => {
                       const v = e.target.value.trim();
+                      e.target.removeAttribute('aria-invalid');
+                      e.target.title = '';
                       if (v === tg.name) return;
-                      if (!isValidTagName(v) || project.tags.some((x) => x.name === v)) {
-                        setError(t('tags.invalidName'));
+                      const problem = nameProblem(v, tg.name);
+                      if (problem) {
+                        toast(problem, { kind: 'error', detail: t('tags.nameKept', { name: tg.name }) });
                         e.target.value = tg.name;
                         return;
                       }
-                      setError(null);
                       update((d) => renameTag(d, tg.name, v));
                     }}
                   />
@@ -165,11 +182,13 @@ export function TagsView() {
                         if (!v) return edit(tg.name, (x) => delete x.address);
                         const parsed = getDialect(project.dialect).parseAddress(v);
                         if (!parsed) {
-                          setError(t('tags.invalidAddress', { dialect: getDialect(project.dialect).name }));
+                          toast(t('tags.invalidAddress', { dialect: getDialect(project.dialect).name }), {
+                            kind: 'error',
+                            detail: t('tags.addressHint', { example: EXAMPLE_ADDR[project.dialect] }),
+                          });
                           e.target.value = tagAddress(tg, project);
                           return;
                         }
-                        setError(null);
                         edit(tg.name, (x) => (x.address = parsed.address));
                       }}
                     />
@@ -215,7 +234,14 @@ export function TagsView() {
                     <button
                       className="icon danger"
                       title={t('tags.delete')}
-                      onClick={() => update((d) => void (d.tags = d.tags.filter((x) => x.name !== tg.name)))}
+                      onClick={() => {
+                        const uses = (xref.get(tg.name) ?? []).length;
+                        updateWithUndo((d) => void (d.tags = d.tags.filter((x) => x.name !== tg.name)), {
+                          message: t('tags.deleted', { name: tg.name }),
+                          // References stay in the program and become errors: say so right away.
+                          detail: uses ? t('tags.deletedInUse', { count: uses }) : undefined,
+                        });
+                      }}
                     >
                       ×
                     </button>

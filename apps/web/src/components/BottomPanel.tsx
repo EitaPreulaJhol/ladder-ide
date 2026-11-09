@@ -10,12 +10,14 @@ import { useUi } from '../store/ui.ts';
 import { goToElement } from '../navigation.ts';
 
 const HEIGHT_KEY = 'ladder-ide:bottom-height';
+/** Without a saved height: 260 px, but at most 30% of the window (short screens keep room for the rungs). */
+const defaultHeight = () => Math.max(120, Math.min(260, Math.round(window.innerHeight * 0.3)));
 function loadHeight(): number {
   try {
     const v = Number(localStorage.getItem(HEIGHT_KEY));
-    return v >= 120 && v <= 2000 ? v : 260;
+    return v >= 120 && v <= 2000 ? v : defaultHeight();
   } catch {
-    return 260;
+    return defaultHeight();
   }
 }
 

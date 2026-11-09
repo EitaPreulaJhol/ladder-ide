@@ -15,6 +15,7 @@ import { CheckPanel } from './CheckPanel.tsx';
 import { PlantCanvas } from './plantBuilder/PlantCanvas.tsx';
 import { OperateHelp, PlantActions } from './plantBuilder/PlantActions.tsx';
 import { PlantStart } from './plantBuilder/PlantEditor.tsx';
+import { updateWithUndo } from '../store/undoable.ts';
 
 // Each plant has its own state type; the registry is keyed by scenario id.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +46,11 @@ export function PlantView() {
   );
   const { setInput, plantAction, send } = useSim.getState();
   const scenario = getScenario(scenarioId);
+  const applyWithUndo = (id: string, withSolution: boolean) =>
+    updateWithUndo((d) => applyScenario(d, id, withSolution), {
+      message: t('plant.applied', { name: t(`plant.${id}.title`) }),
+      detail: t(withSolution ? 'plant.appliedDetailSolution' : 'plant.appliedDetail'),
+    });
 
   if (design)
     return (
@@ -76,21 +82,10 @@ export function PlantView() {
                 <strong>{t(`plant.${sc.id}.title`)}</strong>
                 <p className="muted small">{t(`plant.${sc.id}.summary`)}</p>
                 <div className="row">
-                  <button
-                    data-testid={`use-scenario-${sc.id}`}
-                    onClick={() =>
-                      confirm(t('plant.applyConfirm')) && update((d) => applyScenario(d, sc.id, false))
-                    }
-                  >
+                  <button data-testid={`use-scenario-${sc.id}`} onClick={() => applyWithUndo(sc.id, false)}>
                     {t('plant.apply')}
                   </button>
-                  <button
-                    onClick={() =>
-                      confirm(t('plant.solutionConfirm')) && update((d) => applyScenario(d, sc.id, true))
-                    }
-                  >
-                    {t('plant.applyWithSolution')}
-                  </button>
+                  <button onClick={() => applyWithUndo(sc.id, true)}>{t('plant.applyWithSolution')}</button>
                 </div>
               </div>
             ))}

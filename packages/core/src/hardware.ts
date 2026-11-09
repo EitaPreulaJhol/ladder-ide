@@ -234,6 +234,44 @@ export function setPlcModel(project: Project, familyId: FamilyId, cpuId?: string
   }
 }
 
+export interface HardwareChange {
+  /** I/O modules (not the CPU's on-board groups) that left the rack. */
+  removedModules: number;
+  /** Tags still bound to a channel, but now at another address. */
+  moved: string[];
+  /** Tags that lost their channel (no free one left). */
+  unbound: string[];
+  dialectChanged: boolean;
+}
+
+/**
+ * What a hardware edit (e.g. {@link setPlcModel}) did to the rack and the I/O tags.
+ * Addresses are compared in the new dialect, so a mere change of notation
+ * (%IX0.0 → I0.0) does not count as a move.
+ */
+export function compareHardware(before: Project, after: Project): HardwareChange {
+  const isIo = (m: HardwareModule) => !m.embedded && m.kind !== 'CPU' && m.kind !== 'PS';
+  const kept = new Set(after.hardware.modules.map((m) => m.id));
+  const oldTags = new Map(before.tags.map((t) => [t.name, t]));
+  const moved: string[] = [];
+  const unbound: string[] = [];
+  for (const tag of after.tags) {
+    const old = oldTags.get(tag.name);
+    if (!old?.io) continue;
+    if (!tag.io) unbound.push(tag.name);
+    else if (
+      tagAddress(old, { hardware: before.hardware, dialect: after.dialect }) !== tagAddress(tag, after)
+    )
+      moved.push(tag.name);
+  }
+  return {
+    removedModules: before.hardware.modules.filter((m) => isIo(m) && !kept.has(m.id)).length,
+    moved,
+    unbound,
+    dialectChanged: before.dialect !== after.dialect,
+  };
+}
+
 /** Siemens convention: analog channels start at byte 64 (IW64 / QW64). */
 const ANALOG_BASE_BYTE = 64;
 

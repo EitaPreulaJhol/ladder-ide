@@ -12,6 +12,7 @@ import {
   rung,
   SCENARIOS,
   setPlcModel,
+  compareHardware,
   tagAddress,
   validateProject,
   type Address,
@@ -221,5 +222,33 @@ describe('re-binding keeps channel numbers', () => {
     expect(tagAddress(p.tags[0]!, p)).toBe('%I0.3');
     setPlcModel(p, 'haiwell', 'C10S0R');
     expect(tagAddress(p.tags[0]!, p)).toBe('X3');
+  });
+});
+
+describe('compareHardware', () => {
+  it('reports removed modules, moved and unbound tags after a model change', () => {
+    const p = createProject();
+    applyScenario(p, 'motor', true);
+    setPlcModel(p, 's7-1200', '1214C');
+    addModule(p, 'sm1221-di16');
+    const sm = p.hardware.modules.find((m) => m.kind === 'DI' && !m.embedded)!;
+    p.tags.push({ name: 'X_SM', type: 'BOOL', io: { module: sm.id, channel: 15 } });
+
+    const before = structuredClone(p);
+    setPlcModel(p, 's7-1200', '1211C'); // no SM allowed: X_SM moves to the on-board DI
+    const c = compareHardware(before, p);
+    expect(c.removedModules).toBe(1);
+    expect(c.dialectChanged).toBe(false);
+    expect(c.moved).toEqual(['X_SM']);
+    expect(c.unbound).toEqual([]);
+  });
+
+  it('ignores a change of notation only', () => {
+    const p = createProject();
+    applyScenario(p, 'motor', true);
+    const before = structuredClone(p);
+    p.dialect = 'siemens';
+    const c = compareHardware(before, p);
+    expect(c).toEqual({ removedModules: 0, moved: [], unbound: [], dialectChanged: true });
   });
 });

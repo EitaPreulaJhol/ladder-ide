@@ -11,6 +11,9 @@ interface UiState {
   /** Plant view in edit mode (a blank plant starts in it). */
   plantEditing: boolean;
   setPlantEditing(v: boolean): void;
+  /** Keyboard shortcuts dialog ("?"). */
+  shortcutsOpen: boolean;
+  setShortcutsOpen(v: boolean): void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -20,4 +23,6 @@ export const useUi = create<UiState>((set) => ({
   setExplain: (explain) => set({ explain }),
   plantEditing: false,
   setPlantEditing: (plantEditing) => set({ plantEditing }),
+  shortcutsOpen: false,
+  setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
 }));

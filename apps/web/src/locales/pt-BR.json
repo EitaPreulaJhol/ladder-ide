@@ -34,7 +34,9 @@
     "theme_system": "automático (segue o sistema)",
     "theme_light": "claro",
     "theme_dark": "escuro",
-    "language": "Idioma"
+    "language": "Idioma",
+    "saveError": "Não foi possível salvar o projeto no navegador.",
+    "exportJson": "Exportar projeto (.json)"
   },
   "shared": {
     "banner": "Você está vendo um projeto compartilhado (somente leitura). Pode simular à vontade; para editar, faça uma cópia.",
@@ -44,7 +46,8 @@
     "error": "Não foi possível carregar o projeto: {{error}}",
     "backHome": "Voltar ao início",
     "expired": "Este link de compartilhamento expirou.",
-    "hidden": "Este link foi denunciado e está em análise pela administração."
+    "hidden": "Este link foi denunciado e está em análise pela administração.",
+    "forked": "Cópia “{{name}}” salva nos seus projetos. Agora você pode editar."
   },
   "share": {
     "title": "Compartilhar projeto",
@@ -259,9 +262,14 @@
     "unused": "Não usada",
     "exportCsv": "Exportar CSV",
     "addressHint": "Endereço manual no dialeto atual (ex.: {{example}})",
-    "invalidName": "Nome inválido ou repetido",
+    "invalidName": "Nome de tag inválido: use letras, números e _, começando por letra ou _.",
     "invalidAddress": "Endereço inválido para o dialeto {{dialect}}",
-    "help": "Tags vinculadas a um canal de hardware têm o endereço calculado automaticamente a partir do rack e do dialeto escolhido."
+    "help": "Tags vinculadas a um canal de hardware têm o endereço calculado automaticamente a partir do rack e do dialeto escolhido.",
+    "nameTaken": "Já existe uma tag chamada {{name}}.",
+    "nameKept": "A tag continua como {{name}}.",
+    "deleted": "Tag {{name}} excluída.",
+    "deletedInUse_one": "Ela era usada em {{count}} lugar do programa, que agora aparece como erro.",
+    "deletedInUse_other": "Ela era usada em {{count}} lugares do programa, que agora aparecem como erro."
   },
   "hw": {
     "title": "Planejamento de hardware",
@@ -293,14 +301,22 @@
     "family": "Modelo de CLP",
     "generic": "Genérico (rack livre)",
     "cpu": "CPU",
-    "changeConfirm": "Trocar o modelo de CLP reconstrói o rack (módulos incompatíveis são removidos), ajusta o dialeto e religa as tags de I/O aos canais livres. Continuar?",
     "maxModules": "até {{n}} módulo(s) de expansão",
     "dialectFromFamily": "dialeto: {{dialect}}",
     "unverified": "Pontos ainda não confirmados em documentação oficial (confira no manual antes de montar o painel):",
     "sources": "Fontes dos dados",
     "disclaimer": "Nomes e códigos são citados apenas para indicar compatibilidade. Este projeto não tem vínculo com os fabricantes.",
     "cpuFull": "A {{cpu}} aceita no máximo {{max}} módulo(s) de expansão.",
-    "noExpansion": "Esta CPU não aceita módulos de expansão."
+    "noExpansion": "Esta CPU não aceita módulos de expansão.",
+    "changed": "Modelo de CLP alterado para {{model}}.",
+    "changedModules_one": "{{count}} módulo removido do rack",
+    "changedModules_other": "{{count}} módulos removidos do rack",
+    "changedMoved_one": "{{count}} tag mudou de endereço",
+    "changedMoved_other": "{{count}} tags mudaram de endereço",
+    "changedUnbound": "Sem canal: {{names}}",
+    "changedDialect": "Dialeto: {{dialect}}",
+    "changedNothing": "Nenhuma tag mudou de endereço.",
+    "moduleRemoved": "Módulo {{kind}} do slot {{slot}} removido."
   },
   "panel": {
     "title": "Painel de I/O",
@@ -329,8 +345,6 @@
     "choose": "Escolha um cenário",
     "apply": "Usar este cenário",
     "applyWithSolution": "Usar com solução de exemplo",
-    "applyConfirm": "As tags do cenário serão criadas e vinculadas a canais livres do hardware. Continuar?",
-    "solutionConfirm": "O programa atual será substituído pela solução de exemplo. Continuar?",
     "remove": "Desassociar planta",
     "reset": "Reiniciar planta",
     "task": "Exercício",
@@ -421,7 +435,10 @@
       "lastWrong": "O último ciclo não seguiu a ordem A+ B+ A− B−.",
       "start": "PARTIDA",
       "reset": "Zerar contagem"
-    }
+    },
+    "applied": "Cenário “{{name}}” aplicado.",
+    "appliedDetail": "Tags do cenário criadas e ligadas a canais livres do hardware.",
+    "appliedDetailSolution": "O programa foi substituído pela solução de exemplo."
   },
   "projects": {
     "title": "Projetos",
@@ -430,7 +447,6 @@
     "import": "Importar arquivo (.json ou PLCopen .xml)…",
     "open": "Abrir",
     "delete": "Excluir",
-    "deleteConfirm": "Excluir o projeto “{{name}}” deste navegador? Esta ação não pode ser desfeita.",
     "current": "atual",
     "examples": "Exemplos e exercícios",
     "useExample": "Abrir exemplo",
@@ -453,7 +469,23 @@
     "contentNote": "Os projetos de exemplo (nomes, comentários e descrições de tags) estão em português.",
     "exportPlcopen": "Exportar PLCopen XML",
     "exportPlcopenHint": "Formato de intercâmbio IEC 61131-3 (CODESYS, OpenPLC, Beremiz). Hardware e GRAFCET não são incluídos.",
-    "importWarnings": "Importação concluída com {{n}} aviso(s):"
+    "importWarnings": "Importação concluída com {{n}} aviso(s):",
+    "trashed": "Projeto “{{name}}” movido para a lixeira.",
+    "trashHint_one": "Projetos na lixeira são apagados de vez após {{count}} dia.",
+    "trashHint_other": "Projetos na lixeira são apagados de vez após {{count}} dias.",
+    "trash_one": "Lixeira ({{count}} projeto)",
+    "trash_other": "Lixeira ({{count}} projetos)",
+    "restore": "Restaurar",
+    "restored": "Projeto “{{name}}” restaurado.",
+    "deletedOn": "Excluído em {{date}}",
+    "deleteForever": "Excluir de vez",
+    "deleteForeverConfirm": "Excluir “{{name}}” de vez? Esta ação não pode ser desfeita.",
+    "emptyTrash": "Esvaziar lixeira",
+    "emptyTrashConfirm_one": "Excluir de vez {{count}} projeto da lixeira? Esta ação não pode ser desfeita.",
+    "emptyTrashConfirm_other": "Excluir de vez {{count}} projetos da lixeira? Esta ação não pode ser desfeita.",
+    "imported": "Projeto “{{name}}” importado.",
+    "nameTaken": "Já existe outro projeto chamado “{{name}}” neste navegador.",
+    "nameTakenHint": "O nome foi aceito, mas pode confundir na lista de projetos."
   },
   "widgets": {
     "on": "LIGADO",
@@ -464,7 +496,11 @@
     "ok": "OK",
     "yes": "Sim",
     "no": "Não",
-    "none": "—"
+    "none": "—",
+    "undo": "Desfazer",
+    "close": "Fechar",
+    "notifications": "Notificações",
+    "more": "Mais opções"
   },
   "trend": {
     "add": "Adicionar sinal",
@@ -653,10 +689,11 @@
     "moveLeft": "Mover para a esquerda (executa antes)",
     "moveRight": "Mover para a direita (executa depois)",
     "delete": "Excluir programa",
-    "deleteConfirm": "Excluir o programa “{{name}}”?",
-    "deleteCalled": "O programa “{{name}}” é chamado {{n}} vez(es). Excluir mesmo assim? As chamadas ficarão inválidas.",
     "nameTaken": "Já existe um programa com esse nome.",
-    "grafcetHint": "Programa gerado a partir de um GRAFCET: edite o GRAFCET; o ladder é atualizado automaticamente."
+    "grafcetHint": "Programa gerado a partir de um GRAFCET: edite o GRAFCET; o ladder é atualizado automaticamente.",
+    "deleted": "Programa “{{name}}” excluído.",
+    "deletedCalled_one": "Atenção: {{count}} instrução CALL ainda chama este programa e ficou inválida.",
+    "deletedCalled_other": "Atenção: {{count}} instruções CALL ainda chamam este programa e ficaram inválidas."
   },
   "report": {
     "open": "Denunciar",
@@ -728,7 +765,6 @@
     "run": "Operar",
     "screenName": "Nome da tela",
     "deleteScreen": "Excluir esta tela",
-    "deleteScreenConfirm": "Excluir a tela “{{name}}”?",
     "help": "Clique num item da paleta para adicioná-lo. Arraste para mover, use o canto inferior direito para redimensionar e Del para excluir o selecionado.",
     "newText": "Texto",
     "noTag": "— sem tag —",
@@ -749,7 +785,9 @@
       "numeric": "Entrada numérica",
       "nav": "Navegação",
       "trend": "Gráfico"
-    }
+    },
+    "screenDeleted": "Tela “{{name}}” excluída.",
+    "nameTaken": "Já existe uma tela com esse nome."
   },
   "modbus": {
     "title": "Ponte Modbus TCP (IHM / SCADA real)",
@@ -798,12 +836,10 @@
     "blank": "Começar em branco",
     "fromTemplate": "Abrir exercício como planta editável",
     "withSolution": "com a solução de exemplo (substitui o programa)",
-    "templateConfirm": "As tags do exercício serão criadas e ligadas ao hardware, e a planta dele virá como componentes editáveis (sem correção automática). Continuar?",
     "scenarioActive": "Este projeto usa o exercício «{{name}}», com planta fixa e correção automática.",
     "convert": "Converter em planta editável",
     "convertShort": "Editar planta",
     "convertHint": "Abre a opção de converter este exercício em planta editável",
-    "convertConfirm": "A planta vira um conjunto de componentes editáveis, com as mesmas tags. A correção automática do exercício deixa de valer. Continuar?",
     "edit": "Editar",
     "operate": "Operar",
     "openView": "Abrir em tela cheia",
@@ -811,7 +847,6 @@
     "clearParts": "Esvaziar peças",
     "reset": "Reiniciar planta",
     "remove": "Remover planta",
-    "removeConfirm": "Remover a planta? As tags continuam no projeto.",
     "width": "Largura",
     "height": "Altura",
     "help": "Clique num componente para editar. Arraste para mover; o quadradinho do canto redimensiona. Del apaga; as setas movem (Shift: 1 px).",
@@ -960,6 +995,48 @@
       "overflows": "⚠ Transbordou {{n}}×. Zerar",
       "overheats": "⚠ Superaqueceu {{n}}×. Zerar",
       "manualValve": "arraste a barra sob a válvula"
+    },
+    "removed": "Planta removida. As tags continuam no projeto.",
+    "converted": "Planta convertida em componentes editáveis.",
+    "convertedDetail": "As tags são as mesmas; a correção automática do exercício deixa de valer.",
+    "templateApplied": "Exercício “{{name}}” criado como planta editável.",
+    "templateDetail": "Tags criadas e ligadas ao hardware; sem correção automática.",
+    "templateDetailSolution": "Tags criadas e ligadas ao hardware; o programa foi substituído pela solução de exemplo."
+  },
+  "shortcuts": {
+    "title": "Atalhos de teclado",
+    "open": "Atalhos de teclado (?)",
+    "groups": {
+      "general": "Geral",
+      "editor": "Editor Ladder",
+      "layout": "Planta e IHM (modo edição)",
+      "operate": "Operação e tendência"
+    },
+    "items": {
+      "undo": "Desfazer",
+      "redo": "Refazer",
+      "help": "Mostrar esta lista",
+      "closeDialog": "Fechar janela ou menu",
+      "copy": "Copiar elemento ou rung selecionado",
+      "paste": "Colar no cursor",
+      "deleteSelection": "Excluir a seleção",
+      "branch": "Criar ramo em paralelo (OU) ao redor da seleção",
+      "clearSelection": "Limpar seleção e cursor",
+      "rangeSelection": "Selecionar vários elementos em série",
+      "renameProgram": "Na aba do programa: renomear",
+      "confirmField": "Confirmar o campo em edição",
+      "removeItem": "Remover o item selecionado",
+      "moveItem": "Mover o componente da planta pela grade",
+      "moveItemFine": "Mover 1 pixel por vez",
+      "pressButton": "Acionar o botão do painel em foco",
+      "trendCursor": "Mover o cursor do gráfico de tendência",
+      "trendEnds": "Ir ao início / fim da tendência"
+    },
+    "k": {
+      "delete": "Delete",
+      "click": "clique",
+      "dblclick": "duplo clique",
+      "space": "Espaço"
     }
   }
 }

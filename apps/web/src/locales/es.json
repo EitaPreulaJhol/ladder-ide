@@ -34,7 +34,9 @@
     "theme_system": "automático (sigue el sistema)",
     "theme_light": "claro",
     "theme_dark": "oscuro",
-    "language": "Idioma"
+    "language": "Idioma",
+    "saveError": "No se pudo guardar el proyecto en el navegador.",
+    "exportJson": "Exportar proyecto (.json)"
   },
   "shared": {
     "banner": "Estás viendo un proyecto compartido (solo lectura). Puedes simularlo libremente; para editarlo, haz una copia.",
@@ -44,7 +46,8 @@
     "error": "No se pudo cargar el proyecto: {{error}}",
     "backHome": "Volver al inicio",
     "expired": "Este enlace compartido ha caducado.",
-    "hidden": "Este enlace fue denunciado y está en revisión."
+    "hidden": "Este enlace fue denunciado y está en revisión.",
+    "forked": "Copia “{{name}}” guardada en tus proyectos. Ya puedes editarla."
   },
   "share": {
     "title": "Compartir proyecto",
@@ -259,9 +262,14 @@
     "unused": "Sin uso",
     "exportCsv": "Exportar CSV",
     "addressHint": "Dirección manual en el dialecto actual (p. ej. {{example}})",
-    "invalidName": "Nombre no válido o repetido",
+    "invalidName": "Nombre de etiqueta inválido: usa letras, números y _, empezando por letra o _.",
     "invalidAddress": "Dirección no válida para el dialecto {{dialect}}",
-    "help": "Los tags vinculados a un canal de hardware calculan su dirección automáticamente a partir del rack y del dialecto elegido."
+    "help": "Los tags vinculados a un canal de hardware calculan su dirección automáticamente a partir del rack y del dialecto elegido.",
+    "nameTaken": "Ya existe una etiqueta llamada {{name}}.",
+    "nameKept": "La etiqueta sigue como {{name}}.",
+    "deleted": "Etiqueta {{name}} eliminada.",
+    "deletedInUse_one": "Se usaba en {{count}} lugar del programa, que ahora aparece como error.",
+    "deletedInUse_other": "Se usaba en {{count}} lugares del programa, que ahora aparecen como error."
   },
   "hw": {
     "title": "Planificación de hardware",
@@ -293,14 +301,22 @@
     "family": "Modelo de PLC",
     "generic": "Genérico (rack libre)",
     "cpu": "CPU",
-    "changeConfirm": "Cambiar el modelo de PLC reconstruye el rack (se quitan los módulos incompatibles), ajusta el dialecto y vuelve a vincular los tags de E/S a canales libres. ¿Continuar?",
     "maxModules": "hasta {{n}} módulo(s) de expansión",
     "dialectFromFamily": "dialecto: {{dialect}}",
     "unverified": "Puntos aún no confirmados en documentación oficial (consulta el manual antes de montar el tablero):",
     "sources": "Fuentes de los datos",
     "disclaimer": "Los nombres y códigos se citan solo para indicar compatibilidad. Este proyecto no tiene vínculo con los fabricantes.",
     "cpuFull": "La {{cpu}} admite como máximo {{max}} módulo(s) de expansión.",
-    "noExpansion": "Esta CPU no admite módulos de expansión."
+    "noExpansion": "Esta CPU no admite módulos de expansión.",
+    "changed": "Modelo de PLC cambiado a {{model}}.",
+    "changedModules_one": "{{count}} módulo quitado del rack",
+    "changedModules_other": "{{count}} módulos quitados del rack",
+    "changedMoved_one": "{{count}} etiqueta cambió de dirección",
+    "changedMoved_other": "{{count}} etiquetas cambiaron de dirección",
+    "changedUnbound": "Sin canal: {{names}}",
+    "changedDialect": "Dialecto: {{dialect}}",
+    "changedNothing": "Ninguna etiqueta cambió de dirección.",
+    "moduleRemoved": "Módulo {{kind}} del slot {{slot}} quitado."
   },
   "panel": {
     "title": "Panel de E/S",
@@ -329,8 +345,6 @@
     "choose": "Elige un escenario",
     "apply": "Usar este escenario",
     "applyWithSolution": "Usar con solución de ejemplo",
-    "applyConfirm": "Los tags del escenario se crearán y vincularán a canales libres del hardware. ¿Continuar?",
-    "solutionConfirm": "El programa actual será reemplazado por la solución de ejemplo. ¿Continuar?",
     "remove": "Desasociar planta",
     "reset": "Reiniciar planta",
     "task": "Ejercicio",
@@ -421,7 +435,10 @@
       "lastWrong": "El último ciclo no siguió el orden A+ B+ A− B−.",
       "start": "MARCHA",
       "reset": "Poner a cero"
-    }
+    },
+    "applied": "Escenario “{{name}}” aplicado.",
+    "appliedDetail": "Etiquetas del escenario creadas y vinculadas a canales libres del hardware.",
+    "appliedDetailSolution": "El programa fue reemplazado por la solución de ejemplo."
   },
   "projects": {
     "title": "Proyectos",
@@ -430,7 +447,6 @@
     "import": "Importar archivo (.json o PLCopen .xml)…",
     "open": "Abrir",
     "delete": "Eliminar",
-    "deleteConfirm": "¿Eliminar el proyecto “{{name}}” de este navegador? Esta acción no se puede deshacer.",
     "current": "actual",
     "examples": "Ejemplos y ejercicios",
     "useExample": "Abrir ejemplo",
@@ -453,7 +469,23 @@
     "contentNote": "Los proyectos de ejemplo (nombres, comentarios y descripciones de tags) están escritos en portugués.",
     "exportPlcopen": "Exportar PLCopen XML",
     "exportPlcopenHint": "Formato de intercambio IEC 61131-3 (CODESYS, OpenPLC, Beremiz). No incluye hardware ni GRAFCET.",
-    "importWarnings": "Importación completada con {{n}} aviso(s):"
+    "importWarnings": "Importación completada con {{n}} aviso(s):",
+    "trashed": "Proyecto “{{name}}” movido a la papelera.",
+    "trashHint_one": "Los proyectos en la papelera se eliminan definitivamente tras {{count}} día.",
+    "trashHint_other": "Los proyectos en la papelera se eliminan definitivamente tras {{count}} días.",
+    "trash_one": "Papelera ({{count}} proyecto)",
+    "trash_other": "Papelera ({{count}} proyectos)",
+    "restore": "Restaurar",
+    "restored": "Proyecto “{{name}}” restaurado.",
+    "deletedOn": "Eliminado el {{date}}",
+    "deleteForever": "Eliminar definitivamente",
+    "deleteForeverConfirm": "¿Eliminar “{{name}}” definitivamente? Esta acción no se puede deshacer.",
+    "emptyTrash": "Vaciar papelera",
+    "emptyTrashConfirm_one": "¿Eliminar definitivamente {{count}} proyecto de la papelera? Esta acción no se puede deshacer.",
+    "emptyTrashConfirm_other": "¿Eliminar definitivamente {{count}} proyectos de la papelera? Esta acción no se puede deshacer.",
+    "imported": "Proyecto “{{name}}” importado.",
+    "nameTaken": "Ya existe otro proyecto llamado “{{name}}” en este navegador.",
+    "nameTakenHint": "El nombre se aceptó, pero puede confundir en la lista de proyectos."
   },
   "widgets": {
     "on": "ENCENDIDO",
@@ -464,7 +496,11 @@
     "ok": "Aceptar",
     "yes": "Sí",
     "no": "No",
-    "none": "—"
+    "none": "—",
+    "undo": "Deshacer",
+    "close": "Cerrar",
+    "notifications": "Notificaciones",
+    "more": "Más opciones"
   },
   "trend": {
     "add": "Añadir señal",
@@ -653,10 +689,11 @@
     "moveLeft": "Mover a la izquierda (se ejecuta antes)",
     "moveRight": "Mover a la derecha (se ejecuta después)",
     "delete": "Eliminar programa",
-    "deleteConfirm": "¿Eliminar el programa “{{name}}”?",
-    "deleteCalled": "El programa “{{name}}” es llamado {{n}} vez/veces. ¿Eliminar de todos modos? Las llamadas quedarán inválidas.",
     "nameTaken": "Ya existe un programa con ese nombre.",
-    "grafcetHint": "Programa generado a partir de un GRAFCET: edita el GRAFCET; el ladder se actualiza automáticamente."
+    "grafcetHint": "Programa generado a partir de un GRAFCET: edita el GRAFCET; el ladder se actualiza automáticamente.",
+    "deleted": "Programa “{{name}}” eliminado.",
+    "deletedCalled_one": "Atención: {{count}} instrucción CALL todavía llama a este programa y quedó inválida.",
+    "deletedCalled_other": "Atención: {{count}} instrucciones CALL todavía llaman a este programa y quedaron inválidas."
   },
   "report": {
     "open": "Denunciar",
@@ -728,7 +765,6 @@
     "run": "Operar",
     "screenName": "Nombre de la pantalla",
     "deleteScreen": "Eliminar esta pantalla",
-    "deleteScreenConfirm": "¿Eliminar la pantalla “{{name}}”?",
     "help": "Haz clic en un elemento de la paleta para añadirlo. Arrastra para mover, usa la esquina inferior derecha para redimensionar y Supr para eliminar el seleccionado.",
     "newText": "Texto",
     "noTag": "— sin tag —",
@@ -749,7 +785,9 @@
       "numeric": "Entrada numérica",
       "nav": "Navegación",
       "trend": "Gráfico"
-    }
+    },
+    "screenDeleted": "Pantalla “{{name}}” eliminada.",
+    "nameTaken": "Ya existe una pantalla con ese nombre."
   },
   "modbus": {
     "title": "Puente Modbus TCP (HMI / SCADA real)",
@@ -798,12 +836,10 @@
     "blank": "Empezar en blanco",
     "fromTemplate": "Abrir ejercicio como planta editable",
     "withSolution": "con la solución de ejemplo (reemplaza el programa)",
-    "templateConfirm": "Se crearán los tags del ejercicio, vinculados al hardware, y su planta vendrá como componentes editables (sin corrección automática). ¿Continuar?",
     "scenarioActive": "Este proyecto usa el ejercicio «{{name}}», con planta fija y corrección automática.",
     "convert": "Convertir en planta editable",
     "convertShort": "Editar planta",
     "convertHint": "Abre la opción de convertir este ejercicio en planta editable",
-    "convertConfirm": "La planta se convierte en un conjunto de componentes editables, con los mismos tags. La corrección automática del ejercicio deja de valer. ¿Continuar?",
     "edit": "Editar",
     "operate": "Operar",
     "openView": "Abrir en pantalla completa",
@@ -811,7 +847,6 @@
     "clearParts": "Vaciar piezas",
     "reset": "Reiniciar planta",
     "remove": "Quitar planta",
-    "removeConfirm": "¿Quitar la planta? Los tags siguen en el proyecto.",
     "width": "Ancho",
     "height": "Alto",
     "help": "Haga clic en un componente para editarlo. Arrastre para mover; el cuadradito de la esquina cambia el tamaño. Supr borra; las flechas mueven (Shift: 1 px).",
@@ -960,6 +995,48 @@
       "overflows": "⚠ Desbordó {{n}}×. Borrar",
       "overheats": "⚠ Sobrecalentó {{n}}×. Borrar",
       "manualValve": "arrastre la barra bajo la válvula"
+    },
+    "removed": "Planta eliminada. Las etiquetas siguen en el proyecto.",
+    "converted": "Planta convertida en componentes editables.",
+    "convertedDetail": "Las etiquetas son las mismas; la corrección automática del ejercicio deja de valer.",
+    "templateApplied": "Ejercicio “{{name}}” creado como planta editable.",
+    "templateDetail": "Etiquetas creadas y vinculadas al hardware; sin corrección automática.",
+    "templateDetailSolution": "Etiquetas creadas y vinculadas al hardware; el programa fue reemplazado por la solución de ejemplo."
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "open": "Atajos de teclado (?)",
+    "groups": {
+      "general": "General",
+      "editor": "Editor Ladder",
+      "layout": "Planta e IHM (modo edición)",
+      "operate": "Operación y tendencia"
+    },
+    "items": {
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "help": "Mostrar esta lista",
+      "closeDialog": "Cerrar ventana o menú",
+      "copy": "Copiar elemento o rung seleccionado",
+      "paste": "Pegar en el cursor",
+      "deleteSelection": "Eliminar la selección",
+      "branch": "Crear rama en paralelo (O) alrededor de la selección",
+      "clearSelection": "Limpiar selección y cursor",
+      "rangeSelection": "Seleccionar varios elementos en serie",
+      "renameProgram": "En la pestaña del programa: renombrar",
+      "confirmField": "Confirmar el campo en edición",
+      "removeItem": "Quitar el elemento seleccionado",
+      "moveItem": "Mover el componente de la planta por la cuadrícula",
+      "moveItemFine": "Mover 1 píxel a la vez",
+      "pressButton": "Accionar el botón del panel enfocado",
+      "trendCursor": "Mover el cursor del gráfico de tendencia",
+      "trendEnds": "Ir al inicio / fin de la tendencia"
+    },
+    "k": {
+      "delete": "Supr",
+      "click": "clic",
+      "dblclick": "doble clic",
+      "space": "Espacio"
     }
   }
 }

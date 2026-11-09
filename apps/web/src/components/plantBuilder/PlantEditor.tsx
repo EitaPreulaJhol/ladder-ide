@@ -24,6 +24,7 @@ import { useUi } from '../../store/ui.ts';
 import { PlantCanvas, PLANT_GRID } from './PlantCanvas.tsx';
 import { ComponentProps } from './ComponentProps.tsx';
 import { OperateHelp, PlantActions } from './PlantActions.tsx';
+import { updateWithUndo } from '../../store/undoable.ts';
 
 /** First free spot (top-left first) for a w × h box, keeping a margin around other components. */
 function freeSpot(design: PlantDesign, w: number, h: number): { x: number; y: number } {
@@ -240,10 +241,9 @@ export function PlantEditor() {
                 <button
                   className="danger"
                   onClick={() =>
-                    confirm(t('builder.removeConfirm')) &&
-                    update((p) => {
+                    updateWithUndo((p) => {
                       delete p.plant;
-                    })
+                    }, t('builder.removed'))
                   }
                 >
                   {t('builder.remove')}
@@ -284,8 +284,10 @@ export function PlantStart({ compact = false }: { compact?: boolean }) {
           <p className="small">{t('builder.scenarioActive', { name: t(`plant.${scenarioId}.title`) })}</p>
           <button
             onClick={() => {
-              if (!confirm(t('builder.convertConfirm'))) return;
-              update((p) => void applyPlantTemplate(p, scenarioId));
+              updateWithUndo((p) => void applyPlantTemplate(p, scenarioId), {
+                message: t('builder.converted'),
+                detail: t('builder.convertedDetail'),
+              });
               open();
             }}
             data-testid="plant-convert"
@@ -324,9 +326,10 @@ export function PlantStart({ compact = false }: { compact?: boolean }) {
             </select>
             <button
               onClick={() => {
-                if (!confirm(t('builder.templateConfirm'))) return;
-                if (withSolution && !confirm(t('plant.solutionConfirm'))) return;
-                update((p) => void applyPlantTemplate(p, template, withSolution));
+                updateWithUndo((p) => void applyPlantTemplate(p, template, withSolution), {
+                  message: t('builder.templateApplied', { name: t(`plant.${template}.title`) }),
+                  detail: t(withSolution ? 'builder.templateDetailSolution' : 'builder.templateDetail'),
+                });
                 open();
               }}
               data-testid="plant-from-template"

@@ -8,6 +8,7 @@ import { RungView } from './RungView.tsx';
 import { CW, PAD } from './format.ts';
 import { explainMarks, useExplanation } from '../xref/ExplainPanel.tsx';
 import { GrafcetEditor } from './GrafcetEditor.tsx';
+import { useUi } from '../../store/ui.ts';
 
 export function LadderEditor() {
   const { t } = useTranslation();
@@ -129,7 +130,18 @@ export function LadderEditor() {
                 ⎘
               </button>
               <span className="grow" />
-              <span className="muted small hide-narrow">{t('editor.help')}</span>
+              <span className="muted small editor-help" title={t('editor.help')}>
+                {t('editor.help')}
+              </span>
+              <button
+                className="icon"
+                onClick={() => useUi.getState().setShortcutsOpen(true)}
+                title={t('shortcuts.open')}
+                aria-label={t('shortcuts.open')}
+                data-testid="open-shortcuts"
+              >
+                ⌨
+              </button>
             </div>
           )}
           <div className="rungs" ref={scroller} onClick={() => actions.select(null)}>

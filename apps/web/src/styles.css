@@ -219,6 +219,14 @@ button.primary {
 button.danger {
   color: var(--danger-text);
 }
+button.danger-solid {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+button.danger-solid:hover:not(:disabled) {
+  border-color: var(--danger-text);
+}
 button.active {
   background: var(--accent);
   border-color: var(--accent);
@@ -252,6 +260,10 @@ textarea:focus {
 }
 input[readonly] {
   opacity: 0.8;
+}
+input[aria-invalid='true'] {
+  border-color: var(--danger);
+  outline-color: var(--danger);
 }
 
 .muted {
@@ -312,6 +324,14 @@ input[readonly] {
 }
 .topbar > * {
   flex: none;
+}
+.topbar-extras {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.more-button {
+  display: none;
 }
 .topbar .grow {
   flex: 1;
@@ -453,11 +473,14 @@ input[readonly] {
 .tabs {
   display: flex;
   gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
   padding: 4px 6px 0;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 .tabs button {
+  flex: none;
   border-radius: 6px 6px 0 0;
   border-bottom: none;
   background: transparent;
@@ -522,11 +545,21 @@ input[readonly] {
 
 .editor-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   padding: 5px 10px;
   border-bottom: 1px solid var(--border);
   background: var(--panel-2);
+}
+.editor-help {
+  /* One line: the full text is in the tooltip and in the shortcuts dialog. */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 560px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .editor-toolbar .sep {
   width: 1px;
@@ -1316,6 +1349,198 @@ table.grid tr.unused td {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+}
+.modal.confirm {
+  width: min(440px, calc(100vw - 32px));
+}
+.modal:focus {
+  outline: none;
+}
+.modal.confirm p {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* ------------------------------------------------------------ toasts */
+
+.toasts {
+  /* Bottom right: over the dock's usually empty lower part, not over the watch table. */
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: toast-in 0.15s ease-out;
+}
+.toast.success {
+  border-left-color: var(--power);
+}
+.toast.warn {
+  border-left-color: var(--warn);
+}
+.toast.error {
+  border-left-color: var(--danger);
+}
+.toast-icon {
+  font-weight: 700;
+  color: var(--accent-2);
+}
+.toast.success .toast-icon {
+  color: var(--power);
+}
+.toast.warn .toast-icon {
+  color: var(--warn-text);
+}
+.toast.error .toast-icon {
+  color: var(--danger-text);
+}
+.toast-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.toast-text small {
+  color: var(--muted);
+}
+.toast-action {
+  font-weight: 600;
+  color: var(--accent-2);
+}
+.toast-close {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------ menu, shortcuts, trash */
+
+.menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.menu [role='group'] {
+  display: flex;
+  flex-direction: column;
+}
+.menu button {
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 10px;
+}
+.menu button:hover,
+.menu button:focus-visible {
+  background: var(--hover);
+  outline: none;
+}
+.menu button[aria-checked='true']::after {
+  content: ' ✓';
+  color: var(--accent-2);
+}
+.menu hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+  width: 100%;
+}
+.menu-label {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 10px 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.modal.shortcuts {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+.modal.shortcuts p {
+  margin: 0;
+}
+.shortcut-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 6px 24px;
+}
+.shortcut-groups h4 {
+  margin: 8px 0 6px;
+  font-size: 13px;
+}
+.shortcut-groups dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.shortcut-groups dt {
+  white-space: nowrap;
+}
+.shortcut-groups dd {
+  margin: 0;
+  color: var(--muted);
+}
+kbd {
+  font: 600 11px var(--mono);
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--panel-2);
+}
+
+.trash {
+  margin-top: 12px;
+}
+.trash summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.trash .project-list li {
+  opacity: 0.85;
 }
 
 /* ------------------------------------------------------------ responsive / print */
@@ -1331,12 +1556,37 @@ table.grid tr.unused td {
     display: none;
   }
 }
+@media (max-width: 1280px) {
+  /* Language, theme, shortcuts and export move to the "⋯" menu. */
+  .topbar-extras {
+    display: none;
+  }
+  .more-button {
+    display: inline-block;
+  }
+  .dialect > span {
+    display: none;
+  }
+  .dialect select {
+    max-width: 140px;
+  }
+}
 @media (max-width: 1100px) {
   .dock {
     width: 320px;
   }
   .hide-narrow {
     display: none;
+  }
+  .project-name {
+    width: 150px;
+  }
+  .editor-help {
+    display: none;
+  }
+  .dock .tabs button {
+    font-size: 12px;
+    padding: 4px 8px;
   }
 }
 @media (max-width: 820px) {

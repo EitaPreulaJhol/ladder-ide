@@ -15,6 +15,7 @@ import { liveTrend, useSim } from '../../store/sim.ts';
 import { Widget } from '../IoPanel.tsx';
 import { TrendChart } from '../trend/TrendChart.tsx';
 import { formatValue } from '../editor/format.ts';
+import { updateWithUndo } from '../../store/undoable.ts';
 
 const GRID = 10;
 const snap = (v: number) => Math.round(v / GRID) * GRID;
@@ -80,7 +81,10 @@ export function HmiView() {
   const [screenId, setScreenId] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const screen = screens.find((s) => s.id === screenId) ?? screens[0];
+  const screenNameTaken = (name: string) =>
+    screens.some((s) => s.id !== screen?.id && s.name.trim().toLowerCase() === name.trim().toLowerCase());
   const wrap = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -120,9 +124,13 @@ export function HmiView() {
   });
 
   const addScreen = (fromPanel: boolean) => {
+    // First "Screen N" not in use (numbers can repeat after a screen is deleted).
+    let n = screens.length + 1;
+    while (screens.some((s) => s.name === t('hmi.defaultName', { n }))) n++;
+    const defaultName = t('hmi.defaultName', { n });
     const sc = fromPanel
-      ? screenFromPanel(project, t('hmi.defaultName', { n: screens.length + 1 }))
-      : { id: newId('scr_'), name: t('hmi.defaultName', { n: screens.length + 1 }), widgets: [] };
+      ? screenFromPanel(project, defaultName)
+      : { id: newId('scr_'), name: defaultName, widgets: [] };
     update((d) => {
       d.hmi = { screens: [...(d.hmi?.screens ?? []), sc] };
     });
@@ -254,19 +262,36 @@ export function HmiView() {
               <input
                 key={screen.id + screen.name}
                 defaultValue={screen.name}
-                onBlur={(e) =>
-                  e.target.value.trim() && editScreen((sc) => void (sc.name = e.target.value.trim()))
-                }
+                aria-invalid={!!nameError}
+                aria-describedby={nameError ? 'hmi-name-error' : undefined}
+                onChange={(e) => setNameError(screenNameTaken(e.target.value) ? t('hmi.nameTaken') : null)}
+                onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                onBlur={(e) => {
+                  const v = e.target.value.trim();
+                  setNameError(null);
+                  // Blank or taken: keep the current name (the screen list would be ambiguous).
+                  if (!v || screenNameTaken(v)) e.target.value = screen.name;
+                  else if (v !== screen.name) editScreen((sc) => void (sc.name = v));
+                }}
               />
+              {nameError && (
+                <small className="error-text" id="hmi-name-error">
+                  {nameError}
+                </small>
+              )}
             </label>
             {screens.length > 1 && (
               <button
                 className="danger"
                 onClick={() => {
-                  if (!confirm(t('hmi.deleteScreenConfirm', { name: screen.name }))) return;
-                  update((d) => {
-                    if (d.hmi) d.hmi.screens = d.hmi.screens.filter((s) => s.id !== screen.id);
-                  });
+                  const { id, name } = screen;
+                  updateWithUndo(
+                    (d) => {
+                      if (d.hmi) d.hmi.screens = d.hmi.screens.filter((s) => s.id !== id);
+                    },
+                    t('hmi.screenDeleted', { name }),
+                    { afterUndo: () => setScreenId(id) },
+                  );
                   setScreenId(null);
                 }}
               >

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const watch = (page: Page, tag: string) => page.getByTestId(`watch-${tag}`);
+const lastToast = (page: Page) => page.getByTestId('toast').last();
 
 async function openExample(page: Page, id: string) {
   await page.getByTestId('nav-projects').click();
@@ -96,13 +97,14 @@ test('share a snapshot, open it read-only and fork it', async ({ page }) => {
 });
 
 test('real PLC model: S7-1200 rack, typed address binds to the on-board input', async ({ page }) => {
-  page.on('dialog', (d) => d.accept());
   await page.goto('/');
   await page.getByTestId('nav-projects').click();
   await page.getByTestId('new-project').click();
 
   await page.getByTestId('nav-hardware').click();
   await page.getByTestId('family-select').selectOption('s7-1200');
+  // Applied at once (no confirmation), with a summary and "Undo".
+  await expect(lastToast(page)).toContainText('Modelo de CLP alterado para Siemens');
   await page.getByTestId('cpu-select').selectOption('1214C');
   await expect(page.getByTestId('dialect')).toBeDisabled();
   await expect(page.getByTestId('dialect')).toHaveValue('siemens');
@@ -544,7 +546,6 @@ test('Modbus TCP bridge: a real Modbus client operates the simulation', async ({
 });
 
 test('editable plant: conveyor exercise rebuilt with components sorts a tall part', async ({ page }) => {
-  page.on('dialog', (d) => d.accept());
   await page.goto('/');
   await page.getByTestId('nav-plant').click();
   await page.getByTestId('plant-template').selectOption('conveyor');
@@ -606,4 +607,79 @@ test('editable plant: build from scratch, create tags, drag and operate', async 
   await expect(bulb).toHaveAttribute('fill', '#1f2937');
   await page.locator('.pc-main [data-testid="pc-selector-SW1"]').click();
   await expect(bulb).toHaveAttribute('fill', '#22c55e');
+});
+
+test('destructive edits run at once with an "Undo" toast', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('example-subroutines').click();
+  await page.getByTestId('program-tab-Alarmes').click();
+  await page.getByTestId('delete-program').click();
+  await expect(page.getByTestId('confirm-dialog')).toHaveCount(0);
+  await expect(page.getByTestId('program-tab-Alarmes')).toHaveCount(0);
+  await expect(lastToast(page)).toContainText('Programa “Alarmes” excluído');
+  await expect(lastToast(page)).toContainText('CALL'); // it was still called
+  await lastToast(page).getByTestId('toast-action').click();
+  await expect(page.getByTestId('program-tab-Alarmes')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('toast')).toHaveCount(0);
+});
+
+test('deleted projects go to the trash and can be restored', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('nav-projects').click();
+  await page.getByTestId('new-project').click();
+  await page.getByTestId('nav-projects').click();
+  const list = page.locator('.project-list').first();
+  await expect(list.locator('li')).toHaveCount(2);
+
+  // Undo straight from the toast.
+  await page.getByTestId('project-delete').click();
+  await expect(list.locator('li')).toHaveCount(1);
+  await expect(page.getByTestId('trash')).toContainText('Lixeira (1 projeto)');
+  await lastToast(page).getByTestId('toast-action').click();
+  await expect(list.locator('li')).toHaveCount(2);
+  await expect(page.getByTestId('trash')).toHaveCount(0);
+
+  // Restore from the trash later.
+  await page.getByTestId('project-delete').click();
+  await page.getByTestId('trash').locator('summary').click();
+  await page.getByTestId('project-restore').click();
+  await expect(list.locator('li')).toHaveCount(2);
+
+  // Deleting for good still asks first.
+  await page.getByTestId('project-delete').click();
+  await page.getByTestId('trash').locator('summary').click();
+  await page.getByRole('button', { name: 'Excluir de vez' }).click();
+  await expect(page.getByTestId('confirm-dialog')).toBeVisible();
+  await page.getByTestId('confirm-cancel').click();
+  await expect(page.getByTestId('trash')).toBeVisible();
+  await page.getByRole('button', { name: 'Excluir de vez' }).click();
+  await page.getByTestId('confirm-ok').click();
+  await expect(page.getByTestId('trash')).toHaveCount(0);
+});
+
+test('"?" opens the keyboard shortcuts; Esc closes them without touching the editor', async ({ page }) => {
+  await page.goto('/');
+  await openExample(page, 'sealIn');
+  await page.locator('.rung-gutter').first().click(); // a selected rung: Delete would remove it
+  await page.keyboard.press('?');
+  await expect(page.getByTestId('shortcuts')).toBeVisible();
+  await expect(page.getByTestId('shortcuts')).toContainText('Criar ramo em paralelo');
+  const rungs = await page.locator('.rung').count();
+  await page.keyboard.press('Delete'); // stays inside the dialog
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('shortcuts')).toHaveCount(0);
+  await expect(page.locator('.rung')).toHaveCount(rungs);
+});
+
+test('narrow screens: less used top bar actions move to the "⋯" menu', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 700 });
+  await page.goto('/');
+  await expect(page.getByTestId('language')).toBeHidden();
+  await expect(page.getByTestId('share')).toBeInViewport({ ratio: 1 });
+  await page.getByTestId('more-menu').click();
+  await page.getByRole('menuitemradio', { name: 'English' }).click();
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(page.getByTestId('nav-projects')).toContainText('Projects');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
 });

@@ -16,7 +16,8 @@ import { ProjectsView } from './components/ProjectsView.tsx';
 import { DocView } from './components/DocView.tsx';
 import { HmiView } from './components/hmi/HmiView.tsx';
 import { PlantEditor } from './components/plantBuilder/PlantEditor.tsx';
-import { bootLocal, bootShared, forkShared, startAutosave } from './session.ts';
+import { bootShared, forkShared, startAutosave } from './session.ts';
+import { WelcomeView } from './components/WelcomeView.tsx';
 
 const NAV: { id: View; icon: string }[] = [
   { id: 'editor', icon: '⊢' },
@@ -47,12 +48,14 @@ export function App() {
   const hasPlant = useProject((s) => !!(s.project?.scenarioId || s.project?.plant));
   const setView = useProject((s) => s.setView);
   const dock = useUi((s) => s.dock);
+  const welcome = useUi((s) => s.welcome);
   const setDock = useUi((s) => s.setDock);
   useEditorShortcuts();
 
   useEffect(() => {
     const m = /^\/s\/([A-Za-z0-9_-]+)\/?$/.exec(location.pathname);
-    const p = m ? bootShared(m[1]!) : bootLocal();
+    // Local start: the welcome page chooses what to open. Shared links open directly.
+    const p = m ? bootShared(m[1]!) : Promise.resolve();
     p.then(() => setBoot({ status: 'ready' })).catch((e: Error) =>
       setBoot({ status: 'error', error: e.message }),
     );
@@ -94,7 +97,8 @@ export function App() {
         <a href="/">{t('shared.backHome')}</a>
       </div>
     );
-  if (boot.status === 'loading' || !loaded) return <div className="boot">{t('shared.loading')}</div>;
+  if (boot.status === 'loading') return <div className="boot">{t('shared.loading')}</div>;
+  if (welcome || !loaded) return <WelcomeView />;
 
   return (
     <div className="app">

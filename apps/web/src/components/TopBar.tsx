@@ -4,15 +4,13 @@ import { DIALECTS, DIALECT_IDS, type DialectId } from '@ladder/core';
 import { useProject } from '../store/project.ts';
 import { useSim } from '../store/sim.ts';
 import { downloadText, safeFileName } from '../storage/db.ts';
-import { renameProject } from '../session.ts';
+import { renameProject, showWelcome } from '../session.ts';
 import { useUi } from '../store/ui.ts';
 import { ShareDialog } from './ShareDialog.tsx';
 import { useOnline } from '../pwa.ts';
 import { LANGUAGES, setLanguage, type Language } from '../i18n.ts';
 import { formatMs } from './editor/format.ts';
-import { getThemePref, NEXT_THEME, setThemePref, type ThemePref } from '../theme.ts';
-
-const THEME_ICON: Record<ThemePref, string> = { system: '◐', light: '☀', dark: '☾' };
+import { getThemePref, NEXT_THEME, setThemePref, THEME_ICON, type ThemePref } from '../theme.ts';
 
 const SPEEDS = [0.1, 0.25, 0.5, 1, 2, 5, 10];
 
@@ -43,10 +41,10 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
 
   return (
     <header className="topbar">
-      <div className="brand" title={t('app.tagline')}>
+      <button className="brand" onClick={showWelcome} title={t('welcome.home')} data-testid="home">
         <img src="/favicon.svg" alt="" width={22} height={22} />
         <span>{t('app.title')}</span>
-      </div>
+      </button>
       <input
         className="project-name"
         key={project.id + project.meta.name}
@@ -152,7 +150,7 @@ export function TopBar({ savedAt }: { savedAt: number | null }) {
         >
           ⌨
         </button>
-        <button onClick={exportJson} title={t('top.export')}>
+        <button onClick={exportJson} title={t('top.export')} data-testid="export">
           ⤓ <span className="label-wide">{t('top.export')}</span>
         </button>
       </span>

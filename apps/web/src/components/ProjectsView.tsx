@@ -1,17 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  createProject,
-  DIALECTS,
-  DIALECT_IDS,
-  EXAMPLES,
-  forkProject,
-  getDialect,
-  parseProject,
-  type Project,
-  exportPlcopen,
-  importPlcopen,
-} from '@ladder/core';
+import { DIALECTS, DIALECT_IDS, getDialect, type Project, exportPlcopen } from '@ladder/core';
 import { useProject } from '../store/project.ts';
 import {
   deleteProject,
@@ -21,15 +10,22 @@ import {
   loadProject,
   restoreProject,
   safeFileName,
-  saveProject,
   trashProject,
   TRASH_DAYS,
   type StoredProject,
 } from '../storage/db.ts';
-import { openProject, renameProject, uniqueProjectName } from '../session.ts';
+import {
+  blankProject,
+  exampleProject,
+  importProjectFile,
+  openNewProject,
+  openProject,
+  renameProject,
+} from '../session.ts';
 import { LANGUAGES, locale, setLanguage, type Language } from '../i18n.ts';
 import { confirmDialog } from './ConfirmDialog.tsx';
 import { toast } from '../store/toast.ts';
+import { ExampleGrid } from './ExampleGrid.tsx';
 
 export function ProjectsView() {
   const { t, i18n } = useTranslation();
@@ -47,13 +43,9 @@ export function ProjectsView() {
   };
   useEffect(refresh, [project.id]);
 
-  /** Saves and opens a new project, with a name no other local project uses. */
   const open = async (p: Project) => {
-    p.meta.name = await uniqueProjectName(p.meta.name, p.id);
-    await saveProject(p);
-    openProject(p);
+    await openNewProject(p);
     refresh();
-    return p.meta.name;
   };
 
   const moveToTrash = async (p: StoredProject) => {
@@ -90,30 +82,10 @@ export function ProjectsView() {
   };
 
   const onImport = async (file: File) => {
-    try {
-      const text = await file.text();
-      setImportWarnings([]);
-      if (text.trimStart().startsWith('<')) {
-        // PLCopen XML (TC6) from another IEC 61131-3 tool.
-        const { project: imported, warnings } = importPlcopen(text);
-        // Same invariants as a JSON import (tag names, limits) before it reaches the editor.
-        const r = parseProject(imported);
-        if (!r.ok) throw new Error(r.error);
-        const name = await open(r.project);
-        setImportWarnings(warnings);
-        toast(t('projects.imported', { name }), {
-          kind: warnings.length ? 'warn' : 'success',
-          detail: warnings.length ? t('projects.importWarnings', { n: warnings.length }) : undefined,
-        });
-      } else {
-        const r = parseProject(JSON.parse(text));
-        if (!r.ok) throw new Error(r.error);
-        const name = await open(forkProject(r.project));
-        toast(t('projects.imported', { name }), { kind: 'success' });
-      }
-    } catch (e) {
-      toast(t('projects.importError', { error: (e as Error).message }), { kind: 'error' });
-    }
+    setImportWarnings([]);
+    const warnings = await importProjectFile(file);
+    if (warnings) setImportWarnings(warnings);
+    refresh();
   };
 
   return (
@@ -188,10 +160,7 @@ export function ProjectsView() {
         <div className="view-head">
           <h3>{t('projects.local')}</h3>
           <span className="grow" />
-          <button
-            onClick={() => open(createProject(t('projects.new'), project.dialect))}
-            data-testid="new-project"
-          >
+          <button onClick={() => open(blankProject(project.dialect))} data-testid="new-project">
             ＋ {t('projects.new')}
           </button>
           <button onClick={() => fileRef.current?.click()}>{t('projects.import')}</button>
@@ -297,28 +266,10 @@ export function ProjectsView() {
 
       <section className="card">
         <h3>{t('projects.examples')}</h3>
-        <div className="example-grid">
-          {EXAMPLES.map((ex) => {
-            const sc = ex.id.startsWith('scenario:') ? ex.id.slice(9) : null;
-            return (
-              <div key={ex.id} className="scenario-card">
-                <strong>{sc ? t(`plant.${sc}.title`) : t(`projects.ex.${ex.id}`)}</strong>
-                {sc && <p className="muted small">{t(`plant.${sc}.summary`)}</p>}
-                <button
-                  data-testid={`example-${ex.id}`}
-                  onClick={() => {
-                    const p = ex.build();
-                    p.dialect = project.dialect;
-                    if (sc) p.meta.name = t(`plant.${sc}.title`);
-                    void open(p);
-                  }}
-                >
-                  {t('projects.useExample')}
-                </button>
-              </div>
-            );
-          })}
-        </div>
+        <ExampleGrid
+          onOpen={(id) => void open(exampleProject(id, project.dialect))}
+          testIdPrefix="example-"
+        />
       </section>
     </div>
   );

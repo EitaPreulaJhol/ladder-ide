@@ -179,7 +179,8 @@ export function useEditorShortcuts() {
       const target = e.target as HTMLElement;
       if (target.closest('input, textarea, select, [contenteditable]')) return;
       const s = useProject.getState();
-      if (s.sharedId !== null) return;
+      // Nothing to edit on the welcome page (and maybe no project loaded yet).
+      if (!s.project || useUi.getState().welcome || s.sharedId !== null) return;
       const current = s.project.programs.find((p) => p.id === s.programId) ?? s.project.programs[0];
       const generated = !!current?.generatedBy;
       const ctrl = e.ctrlKey || e.metaKey;

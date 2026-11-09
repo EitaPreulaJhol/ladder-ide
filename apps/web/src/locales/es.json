@@ -1038,5 +1038,19 @@
       "dblclick": "doble clic",
       "space": "Espacio"
     }
+  },
+  "welcome": {
+    "home": "Inicio: abrir, crear o elegir un proyecto",
+    "start": "Empezar",
+    "continue": "Continuar “{{name}}”",
+    "continueHint": "Vuelve al proyecto en el que estabas trabajando.",
+    "new": "Proyecto en blanco",
+    "newHint": "Un programa vacío. El dialecto y el modelo de PLC se eligen después.",
+    "open": "Abrir archivo…",
+    "openHint": "Proyecto exportado (.json) o PLCopen XML de otra herramienta. También puedes arrastrar el archivo a esta página.",
+    "saved": "Proyectos guardados en este navegador",
+    "noSaved": "Aún no hay proyectos guardados. Empieza con un proyecto en blanco o con uno de los ejemplos de abajo.",
+    "openFailed": "No se pudo abrir “{{name}}”.",
+    "drop": "Suelta el archivo para abrir el proyecto"
   }
 }

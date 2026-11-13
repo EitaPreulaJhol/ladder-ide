@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ladder/core": "*",
-    "i18next": "^26.7.2",
+    "i18next": "^27.1.1",
     "idb": "^8.0.4",
     "immer": "^11.2.9",
     "react": "^19.3.1",
